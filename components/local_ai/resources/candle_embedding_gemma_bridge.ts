@@ -1,22 +1,22 @@
-// Copyright (c) 2025 The Brave Authors. All rights reserved.
+// Copyright (c) 2026 The Brave Authors. All rights reserved.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import {
   LocalAIService,
-  EmbeddingGemmaInterfaceReceiver,
+  OnDeviceModelWorkerReceiver,
 } from 'gen/brave/components/local_ai/core/local_ai.mojom.m.js'
 
 // Initialize connection to the browser-side LocalAIService
 const localAIService = LocalAIService.getRemote()
 
-// Implement the EmbeddingGemmaInterface Mojo observer
-class EmbeddingGemmaInterfaceImpl {
-  receiver: EmbeddingGemmaInterfaceReceiver
+// Implement the OnDeviceModelWorker Mojo interface
+class OnDeviceModelWorkerImpl {
+  receiver: OnDeviceModelWorkerReceiver
 
   constructor() {
-    this.receiver = new EmbeddingGemmaInterfaceReceiver(this)
+    this.receiver = new OnDeviceModelWorkerReceiver(this)
   }
 
   // Implementation of OnDeviceModelWorker::GenerateEmbeddings
@@ -31,8 +31,8 @@ class EmbeddingGemmaInterfaceImpl {
   }
 }
 
-// Create and register the EmbeddingGemmaInterface implementation
-const embeddingGemmaImpl = new EmbeddingGemmaInterfaceImpl()
-localAIService.bindEmbeddingGemma(embeddingGemmaImpl.getPendingRemote())
+// Create and register the OnDeviceModelWorker implementation
+const modelWorkerImpl = new OnDeviceModelWorkerImpl()
+localAIService.registerOnDeviceModelWorker(modelWorkerImpl.getPendingRemote())
 
-console.log('[Candle WASM] Embedding Gemma WASM bridge initialized!')
+console.log('[Candle WASM] On-device model worker bridge initialized')
