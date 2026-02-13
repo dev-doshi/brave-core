@@ -100,7 +100,7 @@ void BraveSearchMetrics::MaybeRecordBraveQuery(const GURL& previous_url,
 }
 
 void BraveSearchMetrics::MaybeRecordOmniboxQuery(const GURL& destination_url,
-                                                  bool is_suggestion) {
+                                                 bool is_suggestion) {
   if (!IsBraveSearchURL(destination_url)) {
     return;
   }
@@ -116,8 +116,9 @@ void BraveSearchMetrics::ClearQueryCounts() {
 
 void BraveSearchMetrics::MaybeRecordNTPSearch(int64_t engine_prepopulate_id) {
   if (engine_prepopulate_id !=
-      static_cast<int64_t>(TemplateURLPrepopulateData::BravePrepopulatedEngineID::
-          PREPOPULATED_ENGINE_ID_BRAVE)) {
+      static_cast<int64_t>(
+          TemplateURLPrepopulateData::BravePrepopulatedEngineID::
+              PREPOPULATED_ENGINE_ID_BRAVE)) {
     return;
   }
   IncrementDictCount(kNTPSearchCountKey);
