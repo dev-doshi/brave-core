@@ -589,6 +589,9 @@
     *** mContext;
     *** mBrandedColorScheme;
     *** mTemplateUrlServiceSupplier;
+    *** mDeferredNativeRunnables;
+    *** mAutocompleteCoordinator;
+    *** mUrlCoordinator;
     <init>(...);
     *** updateButtonVisibility(...);
     *** onPrimaryColorChanged(...);
