@@ -7,6 +7,7 @@
 
 #include <utility>
 
+#include "base/containers/map_util.h"
 #include "base/logging.h"
 
 namespace local_ai {
@@ -45,13 +46,16 @@ void LocalAIService::RegisterOnDeviceModelWorker(
     mojo::PendingRemote<mojom::OnDeviceModelWorker> worker) {
   if (model_worker_remote_.is_bound()) {
     DVLOG(1) << "Model worker already bound, resetting";
+    DrainInFlightRequests();
     model_worker_remote_.reset();
   }
+  close_timer_.Stop();
   model_worker_remote_.Bind(std::move(worker));
 
   model_worker_remote_.set_disconnect_handler(base::BindOnce(
       [](LocalAIService* service) {
         DVLOG(1) << "Model worker remote disconnected";
+        service->DrainInFlightRequests();
         service->FailPendingRequests();
         service->CloseBackgroundContents();
       },
@@ -64,6 +68,7 @@ void LocalAIService::RegisterOnDeviceModelWorker(
 
 void LocalAIService::GenerateEmbeddings(const std::string& text,
                                         GenerateEmbeddingsCallback callback) {
+  // Ensure BackgroundContents exists (may have been closed due to idle)
   EnsureBackgroundContents();
 
   if (!model_worker_remote_.is_bound()) {
@@ -72,7 +77,9 @@ void LocalAIService::GenerateEmbeddings(const std::string& text,
     return;
   }
 
-  model_worker_remote_->GenerateEmbeddings(text, std::move(callback));
+  // Reset idle timer since we have activity
+  close_timer_.Stop();
+  ForwardRequest(text, std::move(callback));
 }
 
 void LocalAIService::OnBackgroundContentsReady() {
@@ -81,6 +88,7 @@ void LocalAIService::OnBackgroundContentsReady() {
 
 void LocalAIService::OnBackgroundContentsDestroyed() {
   DVLOG(1) << "LocalAIService: Background contents destroyed";
+  DrainInFlightRequests();
   FailPendingRequests();
   background_web_ui_.reset();
   model_worker_remote_.reset();
@@ -102,8 +110,44 @@ void LocalAIService::ProcessPendingRequests() {
   std::vector<PendingRequest> requests;
   requests.swap(pending_requests_);
   for (auto& request : requests) {
-    model_worker_remote_->GenerateEmbeddings(request.text,
-                                             std::move(request.callback));
+    ForwardRequest(request.text, std::move(request.callback));
+  }
+  MaybeStartIdleTimer();
+}
+
+void LocalAIService::ForwardRequest(const std::string& text,
+                                    GenerateEmbeddingsCallback callback) {
+  uint64_t id = next_request_id_++;
+  in_flight_requests_[id] = std::move(callback);
+  model_worker_remote_->GenerateEmbeddings(
+      text, base::BindOnce(&LocalAIService::OnRequestComplete,
+                           weak_ptr_factory_.GetWeakPtr(), id));
+}
+
+void LocalAIService::OnRequestComplete(uint64_t request_id,
+                                       const std::vector<double>& result) {
+  auto* callback = base::FindOrNull(in_flight_requests_, request_id);
+  if (callback) {
+    std::move(*callback).Run(result);
+    in_flight_requests_.erase(request_id);
+  }
+  MaybeStartIdleTimer();
+}
+
+void LocalAIService::MaybeStartIdleTimer() {
+  if (!in_flight_requests_.empty()) {
+    return;
+  }
+  close_timer_.Start(FROM_HERE, kCloseTimeout,
+                     base::BindOnce(&LocalAIService::CloseBackgroundContents,
+                                    weak_ptr_factory_.GetWeakPtr()));
+}
+
+void LocalAIService::DrainInFlightRequests() {
+  auto requests = std::move(in_flight_requests_);
+  in_flight_requests_.clear();
+  for (auto& [id, callback] : requests) {
+    std::move(callback).Run({});
   }
 }
 
@@ -115,6 +159,12 @@ void LocalAIService::EnsureBackgroundContents() {
   DVLOG(3) << "LocalAIService: Creating background contents";
 
   background_web_ui_ = background_web_ui_factory_.Run(this);
+
+  // Start connection timeout — if the worker doesn't register within
+  // kCloseTimeout, close the background contents to avoid leaking.
+  close_timer_.Start(FROM_HERE, kCloseTimeout,
+                     base::BindOnce(&LocalAIService::CloseBackgroundContents,
+                                    weak_ptr_factory_.GetWeakPtr()));
 }
 
 void LocalAIService::FailPendingRequests() {
@@ -129,6 +179,8 @@ void LocalAIService::CloseBackgroundContents() {
   DVLOG(3) << "LocalAIService: Closing background contents "
               "to free memory";
 
+  close_timer_.Stop();
+  DrainInFlightRequests();
   model_worker_remote_.reset();
   FailPendingRequests();
   background_web_ui_.reset();
