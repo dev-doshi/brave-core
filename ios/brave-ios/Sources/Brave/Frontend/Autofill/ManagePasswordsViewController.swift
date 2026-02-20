@@ -9,12 +9,7 @@ import Preferences
 import SwiftUI
 import UIKit
 
-class ManagedPasswordListViewController: UIHostingController<ManagedPasswordListView> {
-  weak var settingsDelegate: SettingsDelegate? {
-    didSet {
-      rootView.settingsDelegate = settingsDelegate
-    }
-  }
+class ManagePasswordsViewController: UIHostingController<ManagePasswordsView> {
 
   private let passwordAPI: BravePasswordAPI
   private let windowProtection: WindowProtection?
@@ -23,13 +18,12 @@ class ManagedPasswordListViewController: UIHostingController<ManagedPasswordList
     self.passwordAPI = passwordAPI
     self.windowProtection = windowProtection
 
-    let managedPasswordListView = ManagedPasswordListView(
+    let managePasswordsView = ManagePasswordsView(
       passwordAPI: passwordAPI,
-      windowProtection: windowProtection,
-      settingsDelegate: nil
+      windowProtection: windowProtection
     )
 
-    super.init(rootView: managedPasswordListView)
+    super.init(rootView: managePasswordsView)
   }
 
   @available(*, unavailable)

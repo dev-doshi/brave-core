@@ -9388,7 +9388,7 @@ extension Strings {
       value: "Autofill",
       comment: "Settings autofill section title"
     )
-    public static let managePasswordstTitle = NSLocalizedString(
+    public static let managePasswordsTitle = NSLocalizedString(
       "autofill.managePasswords.title",
       tableName: "BraveShared",
       bundle: .module,
@@ -9442,49 +9442,50 @@ extension Strings {
       value: "Offer to save passwords",
       comment: "Display text for the option to offer to save passwords"
     )
-    public static let loginListNeverSavedListHeaderTitle =
+    public static let managePasswordsNeverSavedListHeaderTitle =
       NSLocalizedString(
-        "autofill.managePasswords.loginListNeverSavedListHeaderTitle",
+        "autofill.managePasswords.neverSavedListHeaderTitle",
         tableName: "BraveShared",
         bundle: .module,
         value: "Never Saved",
-        comment: "The header title displayed over the never saved login list entry"
+        comment: "The header title displayed over the never saved passwords list"
       )
-    public static let managedPasswordDeleteCredentialButtonTitle = NSLocalizedString(
-      "autofill.managePasswords.deleteManagedPasswordButtonTitle",
+    public static let managePasswordsDeleteCredentialButtonTitle = NSLocalizedString(
+      "autofill.managePasswords.deleteManagePasswordButtonTitle",
       tableName: "BraveShared",
       bundle: .module,
       value: "Delete",
       comment: "Label for the button used to delete the current login."
     )
-    public static let managedPasswordDeleteCredentialsAlertTitle = NSLocalizedString(
+    public static let managePasswordsDeleteCredentialsAlertTitle = NSLocalizedString(
       "autofill.managePasswords.deleteCredentialsAlertTitle",
       tableName: "BraveShared",
       bundle: .module,
       value: "Are you sure?",
-      comment: "Prompt title when deleting logins"
+      comment: "Prompt title when deleting passwords"
     )
-    public static let managedPasswordListUnknownDomainText = NSLocalizedString(
-      "autofill.managePasswords.managedPasswordListUnknownDomainText",
+    public static let managePasswordsUnknownDomainText = NSLocalizedString(
+      "autofill.managePasswords.UnknownDomainText",
       tableName: "BraveShared",
       bundle: .module,
       value: "Unknown",
       comment: "Text to show when the origin of a managed password is not available"
     )
-    public static let managedPasswordDeleteCredentialAlertCancelActionTitle = NSLocalizedString(
-      "autofill.managePasswords.deleteCredentialAlertCancelActionTitle",
-      tableName: "BraveShared",
-      bundle: .module,
-      value: "Cancel",
-      comment: "Prompt option for cancelling out of deletion"
-    )
-    public static let managedPasswordDeleteCredentialAlertLocalMessage = NSLocalizedString(
-      "autofill.managePasswords.deleteCredentialAlertLocalMessage",
+    public static let managePasswordsDeleteCredentialConfirmMessage = NSLocalizedString(
+      "autofill.managePasswords.deleteCredentialConfirmMessage",
       tableName: "BraveShared",
       bundle: .module,
       value: "This will remove the saved password(s) for %@ from your sync chain and your device.",
       comment:
-        "Alert message warning the user that deleting non-synced logins will permanently remove them"
+        "Alert message warning the user that deleting non-synced passwords will permanently remove them"
+    )
+    public static let managePasswordMultipleAccounts = NSLocalizedString(
+      "autofill.managePassword.multipleAccounts",
+      tableName: "BraveShared",
+      bundle: .module,
+      value: "Accounts",
+      comment:
+        "Label for account when indicating that a domain has multiple accounts"
     )
   }
 }
