@@ -1,0 +1,69 @@
+/* Copyright (c) 2026 The Brave Authors. All rights reserved.
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+/*
+
+1. Create venv
+
+/opt/homebrew/bin/python3.11 -m venv ~/venvs/protoecho
+source ~/venvs/protoecho/bin/activate
+python -m pip install --upgrade pip
+python -m pip install fastapi grpcio-tools protobuf uvicorn
+
+2. Create proto file
+
+cat > echo.proto << 'EOF'
+syntax = "proto3";
+
+message EchoBody {
+  string message = 1;
+  int32 id = 2;
+}
+EOF
+
+3. Generate Python protobuf bindings
+
+python -m grpc_tools.protoc -I. --python_out=. echo.proto
+
+4. Create server
+
+cat > server.py << 'EOF'
+from fastapi import FastAPI, Request, Response
+import echo_pb2
+
+app = FastAPI()
+
+@app.post("/echo")
+async def echo(request: Request):
+    req = echo_pb2.EchoBody()
+    req.ParseFromString(await request.body())
+
+    resp = echo_pb2.EchoBody(
+        message=req.message,
+        id=req.id,
+    )
+
+    return Response(
+        content=resp.SerializeToString(),
+        media_type="application/x-protobuf",
+    )
+EOF
+
+5. Run server
+
+uvicorn server:app
+
+*/
+
+syntax = "proto3";
+
+option optimize_for = LITE_RUNTIME;
+
+package brave_account.endpoints;
+
+message EchoBody {
+  string message = 1;
+  int32 id = 2;
+}

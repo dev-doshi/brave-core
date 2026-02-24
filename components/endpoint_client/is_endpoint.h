@@ -16,27 +16,27 @@ namespace endpoint_client {
 
 namespace detail {
 
-// Concept that checks whether `T` defines a static, accessible member
-// function `URL()` such that:
-//   - `T::URL()` is a valid expression,
-//      and that call yields `GURL`
-//
-// In short: models any type with a proper static `URL()` function
-// whose result is a `GURL`.
 template <typename T>
-concept URL = requires {
+concept HasEndpointStructure = requires {
+  typename T::Request;
+  typename T::Response;
   { T::URL() } -> std::same_as<GURL>;
 };
+
+template <typename T>
+concept IsJSONEndpoint =
+    HasEndpointStructure<T> && IsJSONRequest<typename T::Request> &&
+    IsJSONResponse<typename T::Response>;
+
+template <typename T>
+concept IsProtobufEndpoint =
+    HasEndpointStructure<T> && IsProtobufRequest<typename T::Request> &&
+    IsProtobufResponse<typename T::Response>;
 
 }  // namespace detail
 
 template <typename T>
-concept IsEndpoint =
-    requires {
-      typename T::Request;
-      typename T::Response;
-    } && detail::IsRequest<typename T::Request> &&
-    detail::IsResponse<typename T::Response> && detail::URL<T>;
+concept IsEndpoint = detail::IsJSONEndpoint<T> || detail::IsProtobufEndpoint<T>;
 
 }  // namespace endpoint_client
 

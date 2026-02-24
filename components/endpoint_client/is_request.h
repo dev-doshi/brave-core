@@ -6,25 +6,13 @@
 #ifndef BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_REQUEST_H_
 #define BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_REQUEST_H_
 
-#include "brave/components/endpoint_client/is_request_body.h"
-#include "brave/components/endpoint_client/request.h"
+#include "brave/components/endpoint_client/is_json_request.h"
+#include "brave/components/endpoint_client/is_protobuf_request.h"
 
 namespace endpoint_client::detail {
 
-// Primary template: a type does not satisfy IsRequest unless
-// matched by the partial specialization below.
-template <typename>
-inline constexpr bool kIsRequest = false;
-
-// Partial specialization: Request<T, M> satisfies IsRequest if
-// T satisfies IsRequestBody.
-template <IsRequestBody T, Method M>
-inline constexpr bool kIsRequest<Request<T, M>> = true;
-
-// Concept: a type satisfies IsRequest if
-// its kIsRequest specialization evaluates to true.
 template <typename T>
-concept IsRequest = kIsRequest<T>;
+concept IsRequest = IsJSONRequest<T> || IsProtobufRequest<T>;
 
 }  // namespace endpoint_client::detail
 

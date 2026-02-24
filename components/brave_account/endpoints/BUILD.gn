@@ -3,12 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at https://mozilla.org/MPL/2.0/.
 
+import("//third_party/protobuf/proto_library.gni")
 import("//tools/json_schema_compiler/json_schema_api.gni")
 
 source_set("endpoints") {
   sources = [
     "auth_logout.h",
     "auth_validate.h",
+    "echo.h",
     "login_finalize.h",
     "login_init.h",
     "password_finalize.h",
@@ -21,11 +23,13 @@ source_set("endpoints") {
 
   deps = [ "//brave/components/endpoint_client" ]
 
-  public_deps =
-      [ "//brave/components/brave_account/endpoints:generated_api_types" ]
+  public_deps = [
+    "//brave/components/brave_account/endpoints:idl_bodies",
+    "//brave/components/brave_account/endpoints:proto_bodies",
+  ]
 }
 
-generated_types("generated_api_types") {
+generated_types("idl_bodies") {
   sources = [
     "auth_logout_bodies.idl",
     "auth_validate_bodies.idl",
@@ -43,6 +47,10 @@ generated_types("generated_api_types") {
   deps = [ "//base" ]
 
   root_namespace = "brave_account::%(namespace)s"
+}
+
+proto_library("proto_bodies") {
+  sources = [ "echo_bodies.proto" ]
 }
 
 source_set("unit_tests") {

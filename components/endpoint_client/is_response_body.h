@@ -6,26 +6,13 @@
 #ifndef BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_RESPONSE_BODY_H_
 #define BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_RESPONSE_BODY_H_
 
-#include <concepts>
-#include <optional>
-
-namespace base {
-class Value;
-}  // namespace base
+#include "brave/components/endpoint_client/is_json_response_body.h"
+#include "brave/components/endpoint_client/is_protobuf_response_body.h"
 
 namespace endpoint_client::detail {
 
-// Concept that checks whether `T` defines a static, accessible member
-// function `FromValue()` such that:
-//   - `T::FromValue(value)` is a valid expression,
-//      and that call yields `std::optional<T>`
-//
-// In short: models any type with a proper static `FromValue()` function
-// whose result is a `std::optional<T>`.
 template <typename T>
-concept IsResponseBody = requires(const base::Value& value) {
-  { T::FromValue(value) } -> std::same_as<std::optional<T>>;
-};
+concept IsResponseBody = IsJSONResponseBody<T> || IsProtobufResponseBody<T>;
 
 }  // namespace endpoint_client::detail
 

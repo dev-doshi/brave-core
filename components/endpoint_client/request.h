@@ -33,7 +33,9 @@ enum class Method {
 // Inherits from T to expose its ToValue() interface, and
 // adds a static Method() accessor returning the canonical HTTP method string.
 template <IsRequestBody T, Method M>
-struct Request : T {
+struct Request {
+  using Body = T;
+
   static constexpr std::string_view Method() {
     if constexpr (M == Method::kConnect) {
       return net::HttpRequestHeaders::kConnectMethod;
@@ -60,6 +62,17 @@ struct Request : T {
     }
   }
 
+  static constexpr std::string_view ContentType() {
+    if constexpr (IsJSONRequestBody<T>) {
+      return "application/json";
+    } else if constexpr (IsProtobufRequestBody<T>) {
+      return "application/x-protobuf";
+    } else {
+      static_assert(false, "Unhandled IsRequestBody!");
+    }
+  }
+
+  Body body;
   net::MutableNetworkTrafficAnnotationTag network_traffic_annotation_tag;
   base::TimeDelta timeout_duration;
 };

@@ -18,24 +18,21 @@
 #include "base/check_is_test.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback.h"
-#include "base/json/json_reader.h"
-#include "base/json/json_writer.h"
 #include "base/memory/scoped_refptr.h"
 #include "base/task/sequenced_task_runner.h"
-#include "base/types/expected.h"
 #include "base/types/is_instantiation.h"
-#include "base/values.h"
+#include "brave/components/endpoint_client/deserialize.h"
 #include "brave/components/endpoint_client/is_endpoint.h"
 #include "brave/components/endpoint_client/maybe_strip_with_headers.h"
 #include "brave/components/endpoint_client/request_handle.h"
 #include "brave/components/endpoint_client/response.h"
+#include "brave/components/endpoint_client/serialize.h"
 #include "brave/components/endpoint_client/with_headers.h"
 #include "net/base/load_flags.h"
 #include "net/base/net_errors.h"
 #include "net/http/http_request_headers.h"
 #include "net/http/http_response_headers.h"
 #include "net/traffic_annotation/network_traffic_annotation.h"
-#include "services/network/public/cpp/header_util.h"
 #include "services/network/public/cpp/resource_request.h"
 #include "services/network/public/cpp/shared_url_loader_factory.h"
 #include "services/network/public/cpp/simple_url_loader.h"
@@ -122,11 +119,10 @@ class Client {
         static_cast<net::NetworkTrafficAnnotationTag>(
             request.network_traffic_annotation_tag));
     simple_url_loader->SetAllowHttpErrorResults(true);
-    if (const auto dict = request.ToValue(); !dict.empty()) {
-      auto json = base::WriteJson(dict).value_or("");
-      CHECK(!json.empty()) << "Failed to serialize request to JSON!";
-      simple_url_loader->AttachStringForUpload(std::move(json),
-                                               "application/json");
+    if (auto upload_data = detail::Serialize(request); upload_data) {
+      CHECK(!upload_data->empty()) << "Failed to serialize request!";
+      simple_url_loader->AttachStringForUpload(std::move(*upload_data),
+                                               Request::ContentType());
     }
 
     simple_url_loader->SetTimeoutDuration(request.timeout_duration);
@@ -193,23 +189,7 @@ class Client {
       response.headers = std::move(headers);
     }
 
-    const bool is_2xx = network::IsSuccessfulStatus(*response.status_code);
-    if (is_2xx ? std::is_empty_v<typename Response::SuccessBody>
-               : std::is_empty_v<typename Response::ErrorBody>) {
-      response_body = "{}";
-    }
-
-    const auto value =
-        base::JSONReader::Read(response_body.value_or(""), base::JSON_PARSE_RFC)
-            .value_or(base::Value());
-    if (is_2xx) {
-      response.body = Response::SuccessBody::FromValue(value);
-    } else {
-      response.body =
-          Response::ErrorBody::FromValue(value).transform([](auto error_body) {
-            return base::unexpected(std::move(error_body));
-          });
-    }
+    detail::Deserialize(response, std::move(response_body));
 
     std::move(callback).Run(std::move(response));
   }

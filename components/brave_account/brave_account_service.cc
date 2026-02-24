@@ -20,6 +20,7 @@
 #include "base/values.h"
 #include "brave/components/brave_account/brave_account_service_constants.h"
 #include "brave/components/brave_account/endpoints/auth_logout.h"
+#include "brave/components/brave_account/endpoints/echo.h"
 #include "brave/components/brave_account/endpoints/error_body.h"
 #include "brave/components/brave_account/endpoints/verify_delete.h"
 #include "brave/components/brave_account/pref_names.h"
@@ -41,6 +42,7 @@ using endpoint_client::SetBearerToken;
 using endpoint_client::WithHeaders;
 using endpoints::AuthLogout;
 using endpoints::AuthValidate;
+using endpoints::Echo;
 using endpoints::ErrorBody;
 using endpoints::LoginFinalize;
 using endpoints::LoginInit;
@@ -160,10 +162,10 @@ void BraveAccountService::RegisterInitialize(
   }
 
   auto request = MakeRequest<PasswordInit::Request>();
-  request.blinded_message = blinded_message;
-  request.initiating_service_name = "accounts";
-  request.new_account_email = email;
-  request.serialize_response = true;
+  request.body.blinded_message = blinded_message;
+  request.body.initiating_service_name = "accounts";
+  request.body.new_account_email = email;
+  request.body.serialize_response = true;
   Client<PasswordInit>::Send(
       url_loader_factory_, std::move(request),
       base::BindOnce(&BraveAccountService::OnRegisterInitialize,
@@ -188,7 +190,7 @@ void BraveAccountService::RegisterFinalize(
 
   auto request = MakeRequest<WithHeaders<PasswordFinalize::Request>>();
   SetBearerToken(request, verification_token);
-  request.serialized_record = serialized_record;
+  request.body.serialized_record = serialized_record;
   Client<PasswordFinalize>::Send(
       url_loader_factory_, std::move(request),
       base::BindOnce(&BraveAccountService::OnRegisterFinalize,
@@ -219,7 +221,7 @@ void BraveAccountService::ResendConfirmationEmail(
   SetBearerToken(request, verification_token);
   // Server side will determine locale based on the Accept-Language request
   // header (which is included automatically by upstream).
-  request.locale = "";
+  request.body.locale = "";
   request.timeout_duration = kVerifyResendTimeout;
   Client<VerifyResend>::Send(
       url_loader_factory_, std::move(request),
@@ -249,14 +251,30 @@ void BraveAccountService::CancelRegistration() {
 void BraveAccountService::LoginInitialize(const std::string& email,
                                           const std::string& serialized_ke1,
                                           LoginInitializeCallback callback) {
+  {
+    auto request = MakeRequest<Echo::Request>();
+    request.body.set_message("Hello, world!");
+    request.body.set_id(42);
+    Client<Echo>::Send(
+        url_loader_factory_, std::move(request),
+        base::BindOnce([](Echo::Response response) {
+          if (response.body) {
+            auto body = std::move(*response.body)
+                            .value_or(Echo::Response::SuccessBody());
+            DVLOG(0) << "Echo response - message: " << body.message()
+                     << ", id: " << body.id();
+          }
+        }));
+  }
+
   if (email.empty() || serialized_ke1.empty()) {
     return std::move(callback).Run(base::unexpected(mojom::LoginError::New()));
   }
 
   auto request = MakeRequest<LoginInit::Request>();
-  request.email = email;
-  request.initiating_service_name = "accounts";
-  request.serialized_ke1 = serialized_ke1;
+  request.body.email = email;
+  request.body.initiating_service_name = "accounts";
+  request.body.serialized_ke1 = serialized_ke1;
   Client<LoginInit>::Send(
       url_loader_factory_, std::move(request),
       base::BindOnce(&BraveAccountService::OnLoginInitialize,
@@ -279,7 +297,7 @@ void BraveAccountService::LoginFinalize(
 
   auto request = MakeRequest<WithHeaders<LoginFinalize::Request>>();
   SetBearerToken(request, login_token);
-  request.client_mac = client_mac;
+  request.body.client_mac = client_mac;
   Client<endpoints::LoginFinalize>::Send(
       url_loader_factory_, std::move(request),
       base::BindOnce(&BraveAccountService::OnLoginFinalize,
@@ -343,7 +361,7 @@ void BraveAccountService::GetServiceToken(mojom::Service service,
 
   auto request = MakeRequest<WithHeaders<ServiceToken::Request>>();
   SetBearerToken(request, authentication_token);
-  request.service = service_name;
+  request.body.service = service_name;
   Client<ServiceToken>::Send(
       url_loader_factory_, std::move(request),
       base::BindOnce(&BraveAccountService::OnGetServiceToken,
@@ -497,7 +515,7 @@ void BraveAccountService::VerifyResult(
 
   auto request = MakeRequest<WithHeaders<VerifyResult::Request>>();
   SetBearerToken(request, verification_token);
-  request.wait = false;
+  request.body.wait = false;
   current_verify_result_request =
       Client<endpoints::VerifyResult>::Send<RequestCancelability::kCancelable>(
           url_loader_factory_, std::move(request),

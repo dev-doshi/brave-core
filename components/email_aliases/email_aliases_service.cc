@@ -271,8 +271,8 @@ void EmailAliasesService::UpdateAliasWithToken(
       auto request = MakeRequest<
           endpoint_client::WithHeaders<endpoints::UpdateAlias::Request>>(
           token.value()->serviceToken);
-      request.alias = alias_email;
-      request.status = *update_data->active ? "active" : "inactive";
+      request.body.alias = alias_email;
+      request.body.status = *update_data->active ? "active" : "inactive";
 
       refresh_aliases = false;  // will be updated in response.
       endpoint_client::Client<endpoints::UpdateAlias>::Send(
@@ -306,7 +306,7 @@ void EmailAliasesService::DeleteAliasWithToken(const std::string& alias_email,
     auto request = MakeRequest<
         endpoint_client::WithHeaders<endpoints::DeleteAlias::Request>>(
         token.value()->serviceToken);
-    request.alias = alias_email;
+    request.body.alias = alias_email;
     endpoint_client::Client<endpoints::DeleteAlias>::Send(
         url_loader_factory_, std::move(request),
         base::BindOnce(&EmailAliasesService::OnEditAliasResponse,
