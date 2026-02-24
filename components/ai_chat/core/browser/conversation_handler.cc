@@ -1629,8 +1629,10 @@ ConversationHandler::ExtractSourcesFromRecentAssistantEntries() {
 
       const auto& tool = event->get_tool_use_event();
 
-      // Only process search tools with output
-      if (!IsBraveSearchTool(tool->tool_name) || !tool->output.has_value()) {
+      // Only process tools with WebSources output (search and deep research)
+      if ((!IsBraveSearchTool(tool->tool_name) &&
+           tool->tool_name != mojom::kDeepResearchToolName) ||
+          !tool->output.has_value()) {
         continue;
       }
 
