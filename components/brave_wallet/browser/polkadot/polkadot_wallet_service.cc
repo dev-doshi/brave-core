@@ -10,6 +10,7 @@
 #include "brave/components/brave_wallet/browser/brave_wallet_utils.h"
 #include "brave/components/brave_wallet/browser/keyring_service.h"
 #include "brave/components/brave_wallet/common/common_utils.h"
+#include "brave/components/brave_wallet/common/hex_utils.h"
 
 namespace brave_wallet {
 namespace {
@@ -189,9 +190,9 @@ void PolkadotWalletService::GenerateSignedTransferExtrinsic(
 void PolkadotWalletService::OnGenerateSignedTransferExtrinsic(
     PolkadotSignedTransferTask* transaction_state,
     GenerateSignedTransferExtrinsicCallback callback,
-    base::expected<std::vector<uint8_t>, std::string> signed_extrinsic) {
+    base::expected<PolkadotExtrinsicMetadata, std::string> extrinsic_metadata) {
   polkadot_sign_transactions_.erase(transaction_state);
-  std::move(callback).Run(std::move(signed_extrinsic));
+  std::move(callback).Run(std::move(extrinsic_metadata));
 }
 
 void PolkadotWalletService::SignAndSendTransaction(
@@ -210,19 +211,23 @@ void PolkadotWalletService::SignAndSendTransaction(
 void PolkadotWalletService::OnGenerateSignedTransfer(
     std::string chain_id,
     SignAndSendTransactionCallback callback,
-    base::expected<std::vector<uint8_t>, std::string> signed_extrinsic) {
-  if (!signed_extrinsic.has_value()) {
+    base::expected<PolkadotExtrinsicMetadata, std::string> extrinsic_metadata) {
+  if (!extrinsic_metadata.has_value()) {
     return std::move(callback).Run(
-        base::unexpected(std::move(signed_extrinsic.error())));
+        base::unexpected(std::move(extrinsic_metadata.error())));
   }
 
+  auto extrinsic = base::HexEncodeLower(extrinsic_metadata->extrinsic());
   polkadot_substrate_rpc_.SubmitExtrinsic(
-      chain_id, base::HexEncodeLower(signed_extrinsic.value()),
+      chain_id, extrinsic,
       base::BindOnce(&PolkadotWalletService::OnSubmitSignedExtrinsic,
-                     weak_ptr_factory_.GetWeakPtr(), std::move(callback)));
+                     weak_ptr_factory_.GetWeakPtr(),
+                     std::move(extrinsic_metadata.value()),
+                     std::move(callback)));
 }
 
 void PolkadotWalletService::OnSubmitSignedExtrinsic(
+    PolkadotExtrinsicMetadata extrinsic_metadata,
     SignAndSendTransactionCallback callback,
     std::optional<std::string> transaction_hash,
     std::optional<std::string> error_str) {
@@ -230,8 +235,8 @@ void PolkadotWalletService::OnSubmitSignedExtrinsic(
     return std::move(callback).Run(base::unexpected(*error_str));
   }
 
-  CHECK(transaction_hash.has_value());
-  std::move(callback).Run(base::ok(transaction_hash.value()));
+  std::move(callback).Run(base::ok(std::make_pair(
+      std::move(transaction_hash.value()), std::move(extrinsic_metadata))));
 }
 
 void PolkadotWalletService::GetFeeEstimate(
@@ -250,14 +255,14 @@ void PolkadotWalletService::GetFeeEstimate(
 void PolkadotWalletService::OnGenerateTransferForFee(
     std::string chain_id,
     GetFeeEstimateCallback callback,
-    base::expected<std::vector<uint8_t>, std::string> extrinsic) {
-  if (!extrinsic.has_value()) {
+    base::expected<PolkadotExtrinsicMetadata, std::string> metadata) {
+  if (!metadata.has_value()) {
     return std::move(callback).Run(
-        base::unexpected(std::move(extrinsic.error())));
+        base::unexpected(std::move(metadata.error())));
   }
 
   polkadot_substrate_rpc_.GetPaymentInfo(
-      std::move(chain_id), extrinsic.value(),
+      chain_id, metadata->extrinsic(),
       base::BindOnce(&PolkadotWalletService::OnEstimatedFee,
                      weak_ptr_factory_.GetWeakPtr(), std::move(callback)));
 }
