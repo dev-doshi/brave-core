@@ -4,160 +4,209 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import BraveCore
+import Combine
 import SwiftUI
 
+@MainActor
 @Observable
 class ManagePasswordsViewModel {
-  var credentialList: [PasswordForm] = []
-  var blockedList: [PasswordForm] = []
+
+  /// A thin bridge between `CWVAutofillDataManagerObserver` and the view model. Both delegate
+  /// methods funnel into a single `notify` closure, decoupling the observer from the view model
+  /// and avoiding the need for a direct reference back to it.
+  private class AutofillDataManagerObserver: NSObject, CWVAutofillDataManagerObserver {
+    /// Called whenever passwords change. Expected to trigger a fresh password fetch, with results delivered back on the main thread.
+    var notify: () -> Void
+
+    init(notify: @escaping () -> Void) {
+      self.notify = notify
+    }
+
+    /// Protocol conformance: Triggered when any autofill data changes, not limited to passwords (e.g. credit cards, addresses).
+    func autofillDataManagerDataDidChange(_ autofillDataManager: CWVAutofillDataManager) {
+      notify()
+    }
+
+    /// Protocol conformance: Triggered with a breakdown of which passwords were added, updated, or removed.
+    /// Both this and `autofillDataManagerDataDidChange` may fire for the same change event,
+    /// so `notify` is intentionally idempotent — re-fetching all passwords each time is safe.
+    func autofillDataManager(
+      _ autofillDataManager: CWVAutofillDataManager,
+      didChangePasswordsByAdding added: [CWVPassword],
+      updating updated: [CWVPassword],
+      removing removed: [CWVPassword]
+    ) {
+      notify()
+    }
+  }
+
+  private var allowedList: [CWVPassword] = [] {
+    didSet {
+      savedGroups = allowedList.groupedByDomain()
+      applyFilter()
+    }
+  }
+  private var blockedList: [CWVPassword] = [] {
+    didSet {
+      blockedGroups = blockedList.groupedByDomain()
+      applyFilter()
+    }
+  }
   var isRefreshing: Bool = false
+  var savedGroups: [(domain: String, credentials: [CWVPassword])] = []
+  var blockedGroups: [(domain: String, credentials: [CWVPassword])] = []
+  var filteredSavedGroups: [(domain: String, credentials: [CWVPassword])] = []
+  var filteredBlockedGroups: [(domain: String, credentials: [CWVPassword])] = []
+  var searchText: String = "" {
+    didSet { applyFilter() }
+  }
 
-  //TODO: Use CWVAutoFillDataManager
-  private let passwordAPI: BravePasswordAPI
-  private var passwordStoreListener: PasswordStoreListener?
-  private var searchTimer: Timer?
-  private var isCredentialsBeingSearched = false
-  private var isCredentialsRefreshing = false
-  private var pendingSearchQuery: String?
+  @ObservationIgnored private let autofillDataManager: CWVAutofillDataManager
+  @ObservationIgnored private let observer: AutofillDataManagerObserver
+  @ObservationIgnored private var cancellables = Set<AnyCancellable>()
+  /// Tracks whether a fetch was requested while one was already in flight, ensuring
+  /// no change notification is silently dropped.
+  @ObservationIgnored private var needsRefetch: Bool = false
 
-  init(passwordAPI: BravePasswordAPI) {
-    self.passwordAPI = passwordAPI
+  init(autofillDataManager: CWVAutofillDataManager) {
+    self.autofillDataManager = autofillDataManager
 
-    passwordStoreListener = passwordAPI.add(
-      PasswordStoreStateObserver { [weak self] _ in
-        guard let self = self, !self.isCredentialsBeingSearched else {
-          return
-        }
-        DispatchQueue.main.async {
-          self.fetchCredentials()
-        }
+    let passwordDidChangeSubject = PassthroughSubject<Void, Never>()
+    observer = AutofillDataManagerObserver {
+      passwordDidChangeSubject.send(())
+    }
+    autofillDataManager.add(observer)
+
+    passwordDidChangeSubject
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        self?.fetchPasswords()
       }
-    )
+      .store(in: &cancellables)
+
+    fetchPasswords()
   }
 
   deinit {
-    if let observer = passwordStoreListener {
-      passwordAPI.removeObserver(observer)
-    }
+    autofillDataManager.remove(observer)
   }
 
-  func fetchCredentials(_ searchQuery: String? = nil) {
-    guard !isRefreshing else { return }
-    isRefreshing = true
-    fetchCredentials(searchQuery) { [weak self] _ in
-      DispatchQueue.main.async {
-        self?.isRefreshing = false
-      }
-    }
-  }
-
-  func fetchCredentials(_ searchQuery: String? = nil, completion: @escaping (Bool) -> Void) {
-    if !isCredentialsRefreshing {
-      isCredentialsRefreshing = true
-
-      passwordAPI.getSavedLogins { [weak self] credentials in
-        guard let self = self else { return }
-        let queryToUse = self.pendingSearchQuery ?? searchQuery
-        self.pendingSearchQuery = nil
-        self.reloadEntries(with: queryToUse, passwordForms: credentials) { editEnabled in
-          completion(editEnabled)
-        }
-      }
-    }
-  }
-  private func reloadEntries(
-    with query: String? = nil,
-    passwordForms: [PasswordForm],
-    completion: @escaping (Bool) -> Void
-  ) {
-    DispatchQueue.main.async { [self] in
-      // Clear the blocklist before new items append
-      blockedList.removeAll()
-
-      if let query = query, !query.isEmpty {
-        credentialList = passwordForms.filter { form in
-          if let origin = form.url.origin.url?.absoluteString.lowercased(), origin.contains(query) {
-            if form.isBlockedByUser {
-              blockedList.append(form)
-            }
-            return !form.isBlockedByUser
-          }
-
-          if form.signOnRealm.lowercased().contains(query) {
-            if form.isBlockedByUser {
-              blockedList.append(form)
-            }
-            return !form.isBlockedByUser
-          }
-
-          if let username = form.usernameValue?.lowercased(), username.contains(query) {
-            if form.isBlockedByUser {
-              blockedList.append(form)
-            }
-            return !form.isBlockedByUser
-          }
-
-          return false
-        }
-      } else {
-        credentialList = passwordForms.filter { form in
-          if form.isBlockedByUser {
-            blockedList.append(form)
-          }
-
-          return !form.isBlockedByUser
-        }
-      }
-      self.isCredentialsRefreshing = false
-      completion(true)
-    }
-  }
-  
-  func performSearch(query: String) {
-    searchTimer?.invalidate()
-    pendingSearchQuery = query.isEmpty ? nil : query
-
-    if query.isEmpty {
-      isCredentialsBeingSearched = false
-      fetchCredentials(nil)
+  /// Filters `savedGroups` and `blockedGroups` in a single pass using the current `searchText`,
+  /// lowercasing the query once and matching against both domain and username.
+  /// When the query is empty the filtered results mirror the full groups unchanged.
+  private func applyFilter() {
+    guard !searchText.isEmpty else {
+      filteredSavedGroups = savedGroups
+      filteredBlockedGroups = blockedGroups
       return
     }
+    let lower = searchText.lowercased()
+    let filter: ([(domain: String, credentials: [CWVPassword])]) -> [(domain: String, credentials: [CWVPassword])] = { groups in
+      groups.filter { group in
+        group.domain.lowercased().contains(lower)
+          || group.credentials.contains { ($0.username ?? "").lowercased().contains(lower) }
+      }
+    }
+    filteredSavedGroups = filter(savedGroups)
+    filteredBlockedGroups = filter(blockedGroups)
+  }
 
-    isCredentialsBeingSearched = true
-    searchTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { [weak self] _ in
-      self?.fetchCredentials(query)
+  func fetchPasswords() {
+    guard !isRefreshing else {
+      needsRefetch = true
+      return
+    }
+    isRefreshing = true
+    needsRefetch = false
+
+    autofillDataManager.fetchPasswords { [weak self] passwords in
+      guard let self else { return }
+      Task { @MainActor in
+        self.allowedList = passwords.filter { !$0.isBlocked }
+        self.blockedList = passwords.filter { $0.isBlocked }
+        self.isRefreshing = false
+        if self.needsRefetch {
+          self.fetchPasswords()
+        }
+      }
     }
   }
 
-  func removeLogin(_ credential: PasswordForm) {
-    passwordAPI.removeLogin(credential)
-    fetchCredentials()
-  }
-
-  func removeCredentials(_ credentials: [PasswordForm]) {
+  func deletePasswords(_ credentials: [CWVPassword]) {
     guard !credentials.isEmpty else { return }
     for credential in credentials {
-      passwordAPI.removeLogin(credential)
+      autofillDataManager.delete(credential)
     }
-    fetchCredentials()
   }
 
-  /// Credentials grouped by base domain for the saved logins section (one row per site).
-  var groupedCredentialList: [(domain: String, credentials: [PasswordForm])] {
-    Self.groupCredentialsByDomain(credentialList)
+  func deletePasswords(forGroupIds groupIds: Set<GroupID>) {
+    // Snapshot the current groups before deletion to avoid operating on
+    // potentially stale data if a fetch completes mid-deletion.
+    let savedSnapshot = savedGroups
+    let blockedSnapshot = blockedGroups
+    let toDelete = groupIds.flatMap { groupId -> [CWVPassword] in
+      let (groups, domain): ([(domain: String, credentials: [CWVPassword])], String) =
+        switch groupId {
+        case .saved(let d): (savedSnapshot, d)
+        case .blocked(let d): (blockedSnapshot, d)
+        }
+      return groups.first { $0.domain == domain }?.credentials ?? []
+    }
+    deletePasswords(toDelete)
   }
 
-  /// Blocked credentials grouped by base domain for the never-saved section.
-  var groupedBlockedList: [(domain: String, credentials: [PasswordForm])] {
-    Self.groupCredentialsByDomain(blockedList)
+  private func credentials(for groupId: GroupID) -> [CWVPassword] {
+    let (groups, domain): ([(domain: String, credentials: [CWVPassword])], String) =
+      switch groupId {
+      case .saved(let d): (savedGroups, d)
+      case .blocked(let d): (blockedGroups, d)
+      }
+    return groups.first { $0.domain == domain }?.credentials ?? []
+  }
+}
+
+extension ManagePasswordsViewModel {
+  /// A lightweight selector indicating which password list to operate on: saved or blocked.
+  enum CredentialGroupType: Equatable {
+    case saved
+    case blocked
   }
 
-  static func groupCredentialsByDomain(
-    _ credentials: [PasswordForm]
-  ) -> [(domain: String, credentials: [PasswordForm])] {
+  /// A typed identifier for a single domain group as it appears in the UI, encoding both the
+  /// domain name and which list the group belongs to. This distinction matters because the same
+  /// domain can appear independently in both the saved and blocked lists, so a plain domain string
+  /// would be ambiguous as an identifier.
+  enum GroupID: Hashable {
+    case saved(domain: String)
+    case blocked(domain: String)
+
+    /// The domain string regardless of which list this group belongs to. Useful at the call site
+    /// when only the display label is needed and list membership is irrelevant.
+    var domain: String {
+      switch self {
+      case .saved(let domain), .blocked(let domain): return domain
+      }
+    }
+  }
+}
+
+extension Array where Element == CWVPassword {
+  /// Returns an alphabetically sorted list of (domain, credentials) tuples, where each tuple
+  /// represents a base domain and all passwords associated with it. For example, credentials for
+  /// `accounts.google.com` and `mail.google.com` will both appear under the single key `"google.com"`.
+  ///
+  /// Passwords whose `site` cannot be parsed into a valid URL, or whose URL yields no base domain,
+  /// are silently excluded rather than grouped under a catch-all key. This prevents malformed or
+  /// internal entries from surfacing in the UI.
+  ///
+  /// The sort uses `localizedCaseInsensitiveCompare` so that ordering respects the user's locale
+  /// (e.g. accented characters sort naturally) and is case-insensitive. Ordering of credentials
+  /// within each group is not guaranteed — callers should apply their own sort if display order
+  /// within a domain matters.
+  func groupedByDomain() -> [(domain: String, credentials: [CWVPassword])] {
     let grouped = Dictionary(
-      grouping: credentials,
-      by: { URL(string: $0.signOnRealm)?.baseDomain ?? "" }
+      grouping: self,
+      by: { URL(string: $0.site)?.baseDomain ?? "" }
     )
     return
       grouped
