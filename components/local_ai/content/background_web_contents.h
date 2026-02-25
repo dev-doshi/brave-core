@@ -10,6 +10,7 @@
 
 #include "base/functional/callback.h"
 #include "base/memory/raw_ptr.h"
+#include "base/memory/weak_ptr.h"
 #include "content/public/browser/web_contents_delegate.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "url/gurl.h"
@@ -101,6 +102,8 @@ class BackgroundWebContents : public content::WebContentsDelegate,
   raw_ptr<Delegate> delegate_;
   GURL expected_url_;
   std::unique_ptr<content::WebContents> web_contents_;
+
+  base::WeakPtrFactory<BackgroundWebContents> weak_ptr_factory_{this};
 };
 
 }  // namespace local_ai
