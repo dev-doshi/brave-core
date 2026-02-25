@@ -6,13 +6,17 @@
 #ifndef BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_REQUEST_BODY_H_
 #define BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_REQUEST_BODY_H_
 
-#include "brave/components/endpoint_client/is_json_request_body.h"
-#include "brave/components/endpoint_client/is_protobuf_request_body.h"
+#include "brave/components/endpoint_client/json.h"
+#include "brave/components/endpoint_client/protobuf.h"
 
 namespace endpoint_client::detail {
 
+template <typename T, typename BodyType>
+concept IsRequestBodyOf = BodyType::template kIsRequestBody<T>;
+
 template <typename T>
-concept IsRequestBody = IsJSONRequestBody<T> || IsProtobufRequestBody<T>;
+concept IsRequestBody =
+    IsRequestBodyOf<T, JSON> || IsRequestBodyOf<T, Protobuf>;
 
 }  // namespace endpoint_client::detail
 

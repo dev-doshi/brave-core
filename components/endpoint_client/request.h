@@ -63,9 +63,9 @@ struct Request {
   }
 
   static constexpr std::string_view ContentType() {
-    if constexpr (IsJSONRequestBody<T>) {
+    if constexpr (IsRequestBodyOf<T, JSON>) {
       return "application/json";
-    } else if constexpr (IsProtobufRequestBody<T>) {
+    } else if constexpr (IsRequestBodyOf<T, Protobuf>) {
       return "application/x-protobuf";
     } else {
       static_assert(false, "Unhandled IsRequestBody!");

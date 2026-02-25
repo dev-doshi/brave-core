@@ -14,12 +14,12 @@
 #include "base/json/json_reader.h"
 #include "base/types/expected.h"
 #include "base/values.h"
-#include "brave/components/endpoint_client/is_response.h"
+#include "brave/components/endpoint_client/is_response_of.h"
 #include "services/network/public/cpp/header_util.h"
 
 namespace endpoint_client::detail {
 
-template <IsJSONResponse Response>
+template <IsResponseOf<JSON> Response>
 void Deserialize(Response& response, std::optional<std::string> response_body) {
   const bool is_2xx =
       network::IsSuccessfulStatus(CHECK_DEREF(response.status_code));
@@ -40,7 +40,7 @@ void Deserialize(Response& response, std::optional<std::string> response_body) {
   }
 }
 
-template <IsProtobufResponse Response>
+template <IsResponseOf<Protobuf> Response>
 void Deserialize(Response& response, std::optional<std::string> response_body) {
   const bool is_2xx =
       network::IsSuccessfulStatus(CHECK_DEREF(response.status_code));

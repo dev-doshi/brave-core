@@ -8,8 +8,9 @@
 
 #include <concepts>
 
-#include "brave/components/endpoint_client/is_request.h"
-#include "brave/components/endpoint_client/is_response.h"
+#include "brave/components/endpoint_client/is_request_body.h"
+#include "brave/components/endpoint_client/is_request_of.h"
+#include "brave/components/endpoint_client/is_response_of.h"
 #include "url/gurl.h"
 
 namespace endpoint_client {
@@ -25,13 +26,13 @@ concept HasEndpointStructure = requires {
 
 template <typename T>
 concept IsJSONEndpoint =
-    HasEndpointStructure<T> && IsJSONRequest<typename T::Request> &&
-    IsJSONResponse<typename T::Response>;
+    HasEndpointStructure<T> && IsRequestOf<typename T::Request, JSON> &&
+    IsResponseOf<typename T::Response, JSON>;
 
 template <typename T>
 concept IsProtobufEndpoint =
-    HasEndpointStructure<T> && IsProtobufRequest<typename T::Request> &&
-    IsProtobufResponse<typename T::Response>;
+    HasEndpointStructure<T> && IsRequestOf<typename T::Request, Protobuf> &&
+    IsResponseOf<typename T::Response, Protobuf>;
 
 }  // namespace detail
 

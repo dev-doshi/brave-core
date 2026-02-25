@@ -6,13 +6,12 @@
 #ifndef BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_RESPONSE_H_
 #define BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_RESPONSE_H_
 
-#include "brave/components/endpoint_client/is_json_response.h"
-#include "brave/components/endpoint_client/is_protobuf_response.h"
+#include "brave/components/endpoint_client/is_response_of.h"
 
 namespace endpoint_client::detail {
 
 template <typename T>
-concept IsResponse = IsJSONResponse<T> || IsProtobufResponse<T>;
+concept IsResponse = IsResponseOf<T, JSON> || IsResponseOf<T, Protobuf>;
 
 }  // namespace endpoint_client::detail
 

@@ -6,13 +6,12 @@
 #ifndef BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_REQUEST_H_
 #define BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_REQUEST_H_
 
-#include "brave/components/endpoint_client/is_json_request.h"
-#include "brave/components/endpoint_client/is_protobuf_request.h"
+#include "brave/components/endpoint_client/is_request_of.h"
 
 namespace endpoint_client::detail {
 
 template <typename T>
-concept IsRequest = IsJSONRequest<T> || IsProtobufRequest<T>;
+concept IsRequest = IsRequestOf<T, JSON> || IsRequestOf<T, Protobuf>;
 
 }  // namespace endpoint_client::detail
 
