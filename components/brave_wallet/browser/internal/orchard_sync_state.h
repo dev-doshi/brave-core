@@ -30,6 +30,9 @@ inline constexpr uint32_t kZCashPublicAddressMinConfirmations = 10u;
 // commitment tree, which is used to sign notes for spending.
 class OrchardSyncState {
  public:
+  // `OrchardSyncState` is typically owned with `base::SequenceBound` wrapper.
+  // Needs this alias to avoid copy-paste. Need `std::unique_ptr` for stable
+  // pointer to be referenced as mocked state in tests.
   using SequenceBound = base::SequenceBound<std::unique_ptr<OrchardSyncState>>;
 
   // Creates a new sequence for an instance of OrchardSyncState to be bound to.

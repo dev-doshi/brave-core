@@ -71,8 +71,8 @@ class ZCashWalletService : public mojom::ZCashWalletService,
                      std::unique_ptr<ZCashRpc> zcash_rpc);
   ~ZCashWalletService() override;
 
-  // Bind `sync_state` with `sequence` into `sync_state_`. Must be called after
-  // service is constructed.
+  // Bind `sync_state` with `sequence` into `sync_state_`. Must be called
+  // exactly once after service is constructed.
   virtual void SetupSyncState(scoped_refptr<base::SequencedTaskRunner> sequence,
                               std::unique_ptr<OrchardSyncState> sync_state);
 

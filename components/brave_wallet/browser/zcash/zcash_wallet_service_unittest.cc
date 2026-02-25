@@ -240,16 +240,15 @@ TEST_F(ZCashWalletServiceUnitTest, GetBalance) {
                                                             1, 0);
 
   ON_CALL(zcash_rpc(), GetLatestBlock(_, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id,
-              ZCashRpc::GetLatestBlockCallback callback) {
-            EXPECT_EQ(chain_id, mojom::kZCashMainnet);
-            auto response = zcash::mojom::BlockID::New(
-                2625446u,
-                *PrefixedHexStringToBytes("0x0000000001a01b5fd794e4b071443974c8"
-                                          "35b3e0ff8f96bf3600e07afdbf89c5"));
-            std::move(callback).Run(std::move(response));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         ZCashRpc::GetLatestBlockCallback callback) {
+        EXPECT_EQ(chain_id, mojom::kZCashMainnet);
+        auto response = zcash::mojom::BlockID::New(
+            2625446u,
+            *PrefixedHexStringToBytes("0x0000000001a01b5fd794e4b071443974c8"
+                                      "35b3e0ff8f96bf3600e07afdbf89c5"));
+        std::move(callback).Run(std::move(response));
+      });
 
   ON_CALL(zcash_rpc(), IsKnownAddress(_, _, _, _, _))
       .WillByDefault([](const std::string& chain_id, const std::string& addr,
@@ -277,48 +276,48 @@ TEST_F(ZCashWalletServiceUnitTest, GetBalance) {
       });
 
   ON_CALL(zcash_rpc(), GetUtxoList(_, _, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id, const std::string& address,
-              ZCashRpc::GetUtxoListCallback callback) {
-            std::vector<zcash::mojom::ZCashUtxoPtr> utxos;
-            if (address == "t1ShtibD2UJkYTeGPxeLrMf3jvE11S4Lpwj") {
-              auto utxo = zcash::mojom::ZCashUtxo::New(
-                  "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ" /* address */,
-                  *PrefixedHexStringToBytes(
-                      "0x1b7a7109cec77ae38e57f4f0ec53a4046b08361abb92c62d9567ac"
-                      "e684f633ab") /* tx id */,
-                  0u /* index */,
-                  *PrefixedHexStringToBytes("0x76a914b3b55981e7bf53e10fe51aa4f4"
-                                            "5fdef06dec783d88ac") /*script*/,
-                  10u /* amount */, 2468320u /* block */);
-              utxos.push_back(std::move(utxo));
-            } else if (address == "t1aW1cW7wf6KMuKrjDinyv9tK6F6hrBkRAY") {
-              auto utxo = zcash::mojom::ZCashUtxo::New(
-                  "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ" /* address */,
-                  *PrefixedHexStringToBytes(
-                      "0x1b7a7109cec77ae38e57f4f0ec53a4046b08361abb92c62d9567ac"
-                      "e684f633ab") /* tx id */,
-                  0u /* index */,
-                  *PrefixedHexStringToBytes("0x76a914b3b55981e7bf53e10fe51aa4f4"
-                                            "5fdef06dec783d88ac") /*script*/,
-                  20u /* amount */, 2468320u /* block */);
-              utxos.push_back(std::move(utxo));
-            } else if (address == "t1MF6q7rTYJMMKLgzQ58mCuo76EVhLfSAkW") {
-              auto utxo = zcash::mojom::ZCashUtxo::New(
-                  "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ" /* address */,
-                  *PrefixedHexStringToBytes(
-                      "0x1b7a7109cec77ae38e57f4f0ec53a4046b08361abb92c62d9567ac"
-                      "e684f633ab") /* tx id */,
-                  0u /* index */,
-                  *PrefixedHexStringToBytes("0x76a914b3b55981e7bf53e10fe51aa4f4"
-                                            "5fdef06dec783d88ac") /*script*/,
-                  20u /* amount */, 2468320u /* block */);
-              utxos.push_back(std::move(utxo));
-            }
-            auto response =
-                zcash::mojom::GetAddressUtxosResponse::New(std::move(utxos));
-            std::move(callback).Run(std::move(response));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         const std::string& address,
+                         ZCashRpc::GetUtxoListCallback callback) {
+        std::vector<zcash::mojom::ZCashUtxoPtr> utxos;
+        if (address == "t1ShtibD2UJkYTeGPxeLrMf3jvE11S4Lpwj") {
+          auto utxo = zcash::mojom::ZCashUtxo::New(
+              "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ" /* address */,
+              *PrefixedHexStringToBytes(
+                  "0x1b7a7109cec77ae38e57f4f0ec53a4046b08361abb92c62d9567ac"
+                  "e684f633ab") /* tx id */,
+              0u /* index */,
+              *PrefixedHexStringToBytes("0x76a914b3b55981e7bf53e10fe51aa4f4"
+                                        "5fdef06dec783d88ac") /*script*/,
+              10u /* amount */, 2468320u /* block */);
+          utxos.push_back(std::move(utxo));
+        } else if (address == "t1aW1cW7wf6KMuKrjDinyv9tK6F6hrBkRAY") {
+          auto utxo = zcash::mojom::ZCashUtxo::New(
+              "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ" /* address */,
+              *PrefixedHexStringToBytes(
+                  "0x1b7a7109cec77ae38e57f4f0ec53a4046b08361abb92c62d9567ac"
+                  "e684f633ab") /* tx id */,
+              0u /* index */,
+              *PrefixedHexStringToBytes("0x76a914b3b55981e7bf53e10fe51aa4f4"
+                                        "5fdef06dec783d88ac") /*script*/,
+              20u /* amount */, 2468320u /* block */);
+          utxos.push_back(std::move(utxo));
+        } else if (address == "t1MF6q7rTYJMMKLgzQ58mCuo76EVhLfSAkW") {
+          auto utxo = zcash::mojom::ZCashUtxo::New(
+              "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ" /* address */,
+              *PrefixedHexStringToBytes(
+                  "0x1b7a7109cec77ae38e57f4f0ec53a4046b08361abb92c62d9567ac"
+                  "e684f633ab") /* tx id */,
+              0u /* index */,
+              *PrefixedHexStringToBytes("0x76a914b3b55981e7bf53e10fe51aa4f4"
+                                        "5fdef06dec783d88ac") /*script*/,
+              20u /* amount */, 2468320u /* block */);
+          utxos.push_back(std::move(utxo));
+        }
+        auto response =
+            zcash::mojom::GetAddressUtxosResponse::New(std::move(utxos));
+        std::move(callback).Run(std::move(response));
+      });
 
   base::MockCallback<ZCashWalletService::GetBalanceCallback> balance_callback;
   EXPECT_CALL(balance_callback, Run(_, _))
@@ -349,15 +348,14 @@ TEST_F(ZCashWalletServiceUnitTest, GetBalanceWithShielded) {
                                                             1, 0);
 
   ON_CALL(zcash_rpc(), GetLatestBlock(_, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id,
-              ZCashRpc::GetLatestBlockCallback callback) {
-            auto response = zcash::mojom::BlockID::New(
-                2625446u,
-                *PrefixedHexStringToBytes("0x0000000001a01b5fd794e4b071443974c8"
-                                          "35b3e0ff8f96bf3600e07afdbf89c5"));
-            std::move(callback).Run(std::move(response));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         ZCashRpc::GetLatestBlockCallback callback) {
+        auto response = zcash::mojom::BlockID::New(
+            2625446u,
+            *PrefixedHexStringToBytes("0x0000000001a01b5fd794e4b071443974c8"
+                                      "35b3e0ff8f96bf3600e07afdbf89c5"));
+        std::move(callback).Run(std::move(response));
+      });
 
   ON_CALL(zcash_rpc(), IsKnownAddress(_, _, _, _, _))
       .WillByDefault([](const std::string& chain_id, const std::string& addr,
@@ -372,26 +370,26 @@ TEST_F(ZCashWalletServiceUnitTest, GetBalanceWithShielded) {
       });
 
   ON_CALL(zcash_rpc(), GetUtxoList(_, _, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id, const std::string& address,
-              ZCashRpc::GetUtxoListCallback callback) {
-            std::vector<zcash::mojom::ZCashUtxoPtr> utxos;
-            if (address == "t1ShtibD2UJkYTeGPxeLrMf3jvE11S4Lpwj") {
-              auto utxo = zcash::mojom::ZCashUtxo::New(
-                  "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ" /* address */,
-                  *PrefixedHexStringToBytes(
-                      "0x1b7a7109cec77ae38e57f4f0ec53a4046b08361abb92c62d9567ac"
-                      "e684f633ab") /* tx id */,
-                  0u /* index */,
-                  *PrefixedHexStringToBytes("0x76a914b3b55981e7bf53e10fe51aa4f4"
-                                            "5fdef06dec783d88ac") /*script*/,
-                  10u /* amount */, 2468320u /* block */);
-              utxos.push_back(std::move(utxo));
-            }
-            auto response =
-                zcash::mojom::GetAddressUtxosResponse::New(std::move(utxos));
-            std::move(callback).Run(std::move(response));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         const std::string& address,
+                         ZCashRpc::GetUtxoListCallback callback) {
+        std::vector<zcash::mojom::ZCashUtxoPtr> utxos;
+        if (address == "t1ShtibD2UJkYTeGPxeLrMf3jvE11S4Lpwj") {
+          auto utxo = zcash::mojom::ZCashUtxo::New(
+              "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ" /* address */,
+              *PrefixedHexStringToBytes(
+                  "0x1b7a7109cec77ae38e57f4f0ec53a4046b08361abb92c62d9567ac"
+                  "e684f633ab") /* tx id */,
+              0u /* index */,
+              *PrefixedHexStringToBytes("0x76a914b3b55981e7bf53e10fe51aa4f4"
+                                        "5fdef06dec783d88ac") /*script*/,
+              10u /* amount */, 2468320u /* block */);
+          utxos.push_back(std::move(utxo));
+        }
+        auto response =
+            zcash::mojom::GetAddressUtxosResponse::New(std::move(utxos));
+        std::move(callback).Run(std::move(response));
+      });
 
   ON_CALL(mock_orchard_sync_state(), GetSpendableNotes(_, _))
       .WillByDefault([](const mojom::AccountIdPtr& account_id,
@@ -439,15 +437,14 @@ TEST_F(ZCashWalletServiceUnitTest, GetBalanceWithShielded_FeatureDisabled) {
                                                             1, 0);
 
   ON_CALL(zcash_rpc(), GetLatestBlock(_, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id,
-              ZCashRpc::GetLatestBlockCallback callback) {
-            auto response = zcash::mojom::BlockID::New(
-                2625446u,
-                *PrefixedHexStringToBytes("0x0000000001a01b5fd794e4b071443974c8"
-                                          "35b3e0ff8f96bf3600e07afdbf89c5"));
-            std::move(callback).Run(std::move(response));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         ZCashRpc::GetLatestBlockCallback callback) {
+        auto response = zcash::mojom::BlockID::New(
+            2625446u,
+            *PrefixedHexStringToBytes("0x0000000001a01b5fd794e4b071443974c8"
+                                      "35b3e0ff8f96bf3600e07afdbf89c5"));
+        std::move(callback).Run(std::move(response));
+      });
 
   ON_CALL(zcash_rpc(), IsKnownAddress(_, _, _, _, _))
       .WillByDefault([](const std::string& chain_id, const std::string& addr,
@@ -462,26 +459,26 @@ TEST_F(ZCashWalletServiceUnitTest, GetBalanceWithShielded_FeatureDisabled) {
       });
 
   ON_CALL(zcash_rpc(), GetUtxoList(_, _, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id, const std::string& address,
-              ZCashRpc::GetUtxoListCallback callback) {
-            std::vector<zcash::mojom::ZCashUtxoPtr> utxos;
-            if (address == "t1ShtibD2UJkYTeGPxeLrMf3jvE11S4Lpwj") {
-              auto utxo = zcash::mojom::ZCashUtxo::New(
-                  "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ" /* address */,
-                  *PrefixedHexStringToBytes(
-                      "0x1b7a7109cec77ae38e57f4f0ec53a4046b08361abb92c62d9567ac"
-                      "e684f633ab") /* tx id */,
-                  0u /* index */,
-                  *PrefixedHexStringToBytes("0x76a914b3b55981e7bf53e10fe51aa4f4"
-                                            "5fdef06dec783d88ac") /*script*/,
-                  10u /* amount */, 2468320u /* block */);
-              utxos.push_back(std::move(utxo));
-            }
-            auto response =
-                zcash::mojom::GetAddressUtxosResponse::New(std::move(utxos));
-            std::move(callback).Run(std::move(response));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         const std::string& address,
+                         ZCashRpc::GetUtxoListCallback callback) {
+        std::vector<zcash::mojom::ZCashUtxoPtr> utxos;
+        if (address == "t1ShtibD2UJkYTeGPxeLrMf3jvE11S4Lpwj") {
+          auto utxo = zcash::mojom::ZCashUtxo::New(
+              "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ" /* address */,
+              *PrefixedHexStringToBytes(
+                  "0x1b7a7109cec77ae38e57f4f0ec53a4046b08361abb92c62d9567ac"
+                  "e684f633ab") /* tx id */,
+              0u /* index */,
+              *PrefixedHexStringToBytes("0x76a914b3b55981e7bf53e10fe51aa4f4"
+                                        "5fdef06dec783d88ac") /*script*/,
+              10u /* amount */, 2468320u /* block */);
+          utxos.push_back(std::move(utxo));
+        }
+        auto response =
+            zcash::mojom::GetAddressUtxosResponse::New(std::move(utxos));
+        std::move(callback).Run(std::move(response));
+      });
 
   OrchardNote note;
   note.amount = 10u;
@@ -1198,18 +1195,17 @@ TEST_F(ZCashWalletServiceUnitTest, AutoSync) {
       });
 
   ON_CALL(zcash_rpc(), GetTreeState(_, _, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id, zcash::mojom::BlockIDPtr block_id,
-              ZCashRpc::GetTreeStateCallback callback) {
-            EXPECT_EQ(chain_id, mojom::kZCashMainnet);
-            EXPECT_EQ(block_id->height, 100000u - kChainReorgBlockDelta);
-            auto tree_state = zcash::mojom::TreeState::New(
-                "main" /* network */,
-                100000u - kChainReorgBlockDelta /* height */,
-                "hexhexhex2" /* hash */, 123 /* time */, "" /* sapling tree */,
-                "" /* orchard tree */);
-            std::move(callback).Run(std::move(tree_state));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         zcash::mojom::BlockIDPtr block_id,
+                         ZCashRpc::GetTreeStateCallback callback) {
+        EXPECT_EQ(chain_id, mojom::kZCashMainnet);
+        EXPECT_EQ(block_id->height, 100000u - kChainReorgBlockDelta);
+        auto tree_state = zcash::mojom::TreeState::New(
+            "main" /* network */, 100000u - kChainReorgBlockDelta /* height */,
+            "hexhexhex2" /* hash */, 123 /* time */, "" /* sapling tree */,
+            "" /* orchard tree */);
+        std::move(callback).Run(std::move(tree_state));
+      });
 
   EXPECT_FALSE(auto_sync_managers().contains(account_id_1));
   {
@@ -1247,20 +1243,18 @@ TEST_F(ZCashWalletServiceUnitTest, ZCashAccountInfo) {
     base::MockCallback<ZCashWalletService::GetZCashAccountInfoCallback>
         get_zcash_account_info_callback;
     EXPECT_CALL(get_zcash_account_info_callback, Run(_))
-        .WillOnce(  //
-            [&](mojom::ZCashAccountInfoPtr account_info) {
-              EXPECT_EQ(account_info->unified_address.value(),
-                        "u1gjrzpk0v0v2ae359cp296zapth9mw8xseyzhu44a4ftux3gn8gh9"
-                        "hmzazrz6f3yvjyglrchz68g0s2hwpjknw3eywxgp0tn3p5p3g94w4j"
-                        "dfked5as22p9y3ftkyt59eh7phch995yh");
-              EXPECT_EQ(account_info->orchard_address.value(),
-                        "u1qtnwpp2gg5r745auv2r5cvc4v0q8sr8nd3xcg48ck92xul8t6tmv"
-                        "urkzksfln94mh2amfxjemwwtmvys4l40xlkxck5fpgqxzuqxs2jq");
-              EXPECT_EQ(
-                  account_info->orchard_internal_address.value(),
-                  "u1dl9dtss80tsutx3xfje4vlndwhc2f2pernhhpxfsz9vw6nr0zz"
-                  "lkw9p2m22xjcn5588fp3tnta9uqhpk4nh06xumwvt8ff7w653g5pvk");
-            });
+        .WillOnce([&](mojom::ZCashAccountInfoPtr account_info) {
+          EXPECT_EQ(account_info->unified_address.value(),
+                    "u1gjrzpk0v0v2ae359cp296zapth9mw8xseyzhu44a4ftux3gn8gh9"
+                    "hmzazrz6f3yvjyglrchz68g0s2hwpjknw3eywxgp0tn3p5p3g94w4j"
+                    "dfked5as22p9y3ftkyt59eh7phch995yh");
+          EXPECT_EQ(account_info->orchard_address.value(),
+                    "u1qtnwpp2gg5r745auv2r5cvc4v0q8sr8nd3xcg48ck92xul8t6tmv"
+                    "urkzksfln94mh2amfxjemwwtmvys4l40xlkxck5fpgqxzuqxs2jq");
+          EXPECT_EQ(account_info->orchard_internal_address.value(),
+                    "u1dl9dtss80tsutx3xfje4vlndwhc2f2pernhhpxfsz9vw6nr0zz"
+                    "lkw9p2m22xjcn5588fp3tnta9uqhpk4nh06xumwvt8ff7w653g5pvk");
+        });
     zcash_wallet_service_->GetZCashAccountInfo(
         account_id_1.Clone(), get_zcash_account_info_callback.Get());
     task_environment_.RunUntilIdle();
@@ -1477,17 +1471,16 @@ TEST_F(ZCashWalletServiceUnitTest, MakeAccountShielded) {
       });
 
   ON_CALL(zcash_rpc(), GetTreeState(_, _, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id, zcash::mojom::BlockIDPtr block_id,
-              ZCashRpc::GetTreeStateCallback callback) {
-            EXPECT_EQ(block_id->height, 100000u - kChainReorgBlockDelta);
-            auto tree_state = zcash::mojom::TreeState::New(
-                "main" /* network */,
-                100000u - kChainReorgBlockDelta /* height */,
-                "hexhexhex2" /* hash */, 123 /* time */, "" /* sapling tree */,
-                "" /* orchard tree */);
-            std::move(callback).Run(std::move(tree_state));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         zcash::mojom::BlockIDPtr block_id,
+                         ZCashRpc::GetTreeStateCallback callback) {
+        EXPECT_EQ(block_id->height, 100000u - kChainReorgBlockDelta);
+        auto tree_state = zcash::mojom::TreeState::New(
+            "main" /* network */, 100000u - kChainReorgBlockDelta /* height */,
+            "hexhexhex2" /* hash */, 123 /* time */, "" /* sapling tree */,
+            "" /* orchard tree */);
+        std::move(callback).Run(std::move(tree_state));
+      });
 
   {
     base::MockCallback<ZCashWalletService::MakeAccountShieldedCallback>
@@ -1557,26 +1550,26 @@ TEST_F(ZCashWalletServiceUnitTest, ShieldFunds_FailsOnNetworkError) {
   auto account_id = account->account_id.Clone();
   keyring_service()->UpdateNextUnusedAddressForZCashAccount(account_id, 1, 0);
   ON_CALL(zcash_rpc(), GetUtxoList(_, _, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id, const std::string& address,
-              ZCashRpc::GetUtxoListCallback callback) {
-            std::vector<zcash::mojom::ZCashUtxoPtr> utxos;
-            if (address == "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ") {
-              auto utxo = zcash::mojom::ZCashUtxo::New(
-                  "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ" /* address */,
-                  *PrefixedHexStringToBytes(
-                      "0x1b7a7109cec77ae38e57f4f0ec53a4046b08361abb92c62d9567ac"
-                      "e684f633ab") /* tx id */,
-                  0u /* index */,
-                  *PrefixedHexStringToBytes("0x76a914b3b55981e7bf53e10fe51aa4f4"
-                                            "5fdef06dec783d88ac") /*script*/,
-                  500000u /* amount */, 2468320u /* block */);
-              utxos.push_back(std::move(utxo));
-            }
-            auto response =
-                zcash::mojom::GetAddressUtxosResponse::New(std::move(utxos));
-            std::move(callback).Run(std::move(response));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         const std::string& address,
+                         ZCashRpc::GetUtxoListCallback callback) {
+        std::vector<zcash::mojom::ZCashUtxoPtr> utxos;
+        if (address == "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ") {
+          auto utxo = zcash::mojom::ZCashUtxo::New(
+              "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ" /* address */,
+              *PrefixedHexStringToBytes(
+                  "0x1b7a7109cec77ae38e57f4f0ec53a4046b08361abb92c62d9567ac"
+                  "e684f633ab") /* tx id */,
+              0u /* index */,
+              *PrefixedHexStringToBytes("0x76a914b3b55981e7bf53e10fe51aa4f4"
+                                        "5fdef06dec783d88ac") /*script*/,
+              500000u /* amount */, 2468320u /* block */);
+          utxos.push_back(std::move(utxo));
+        }
+        auto response =
+            zcash::mojom::GetAddressUtxosResponse::New(std::move(utxos));
+        std::move(callback).Run(std::move(response));
+      });
   ON_CALL(zcash_rpc(), GetLatestBlock(_, _))
       .WillByDefault([&](const std::string& chain_id,
                          ZCashRpc::GetLatestBlockCallback callback) {
@@ -1652,15 +1645,14 @@ TEST_F(ZCashWalletServiceUnitTest, MAYBE_ShieldFunds) {
       });
 
   ON_CALL(zcash_rpc(), GetLatestBlock(_, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id,
-              ZCashRpc::GetLatestBlockCallback callback) {
-            auto response = zcash::mojom::BlockID::New(
-                2625446u,
-                *PrefixedHexStringToBytes("0x0000000001a01b5fd794e4b071443974c8"
-                                          "35b3e0ff8f96bf3600e07afdbf89c5"));
-            std::move(callback).Run(std::move(response));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         ZCashRpc::GetLatestBlockCallback callback) {
+        auto response = zcash::mojom::BlockID::New(
+            2625446u,
+            *PrefixedHexStringToBytes("0x0000000001a01b5fd794e4b071443974c8"
+                                      "35b3e0ff8f96bf3600e07afdbf89c5"));
+        std::move(callback).Run(std::move(response));
+      });
 
   ON_CALL(zcash_rpc(), GetTreeState(_, _, _))
       .WillByDefault([&](const std::string& chain_id,
@@ -1710,26 +1702,26 @@ TEST_F(ZCashWalletServiceUnitTest, MAYBE_ShieldFunds) {
       });
 
   ON_CALL(zcash_rpc(), GetUtxoList(_, _, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id, const std::string& address,
-              ZCashRpc::GetUtxoListCallback callback) {
-            std::vector<zcash::mojom::ZCashUtxoPtr> utxos;
-            if (address == "t1aVmWeikjJuR4yfuxQznCMAxPoxZggz82J") {
-              auto utxo = zcash::mojom::ZCashUtxo::New(
-                  "t1aVmWeikjJuR4yfuxQznCMAxPoxZggz82J" /* address */,
-                  *PrefixedHexStringToBytes(
-                      "0x6f31c69b7af52379871903fda4396e37117d9e1bbc94a972cda1c9"
-                      "77742455fa") /* tx id */,
-                  0u /* index */,
-                  *PrefixedHexStringToBytes("0x76a914b658ec0220a588bfafb3816eca"
-                                            "a03baabd99c0a888ac") /*script*/,
-                  200000u /* amount */, 2625431u /* block */);
-              utxos.push_back(std::move(utxo));
-            }
-            auto response =
-                zcash::mojom::GetAddressUtxosResponse::New(std::move(utxos));
-            std::move(callback).Run(std::move(response));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         const std::string& address,
+                         ZCashRpc::GetUtxoListCallback callback) {
+        std::vector<zcash::mojom::ZCashUtxoPtr> utxos;
+        if (address == "t1aVmWeikjJuR4yfuxQznCMAxPoxZggz82J") {
+          auto utxo = zcash::mojom::ZCashUtxo::New(
+              "t1aVmWeikjJuR4yfuxQznCMAxPoxZggz82J" /* address */,
+              *PrefixedHexStringToBytes(
+                  "0x6f31c69b7af52379871903fda4396e37117d9e1bbc94a972cda1c9"
+                  "77742455fa") /* tx id */,
+              0u /* index */,
+              *PrefixedHexStringToBytes("0x76a914b658ec0220a588bfafb3816eca"
+                                        "a03baabd99c0a888ac") /*script*/,
+              200000u /* amount */, 2625431u /* block */);
+          utxos.push_back(std::move(utxo));
+        }
+        auto response =
+            zcash::mojom::GetAddressUtxosResponse::New(std::move(utxos));
+        std::move(callback).Run(std::move(response));
+      });
 
   OrchardMemo memo;
   memo.fill('a');
@@ -2061,83 +2053,82 @@ TEST_F(ZCashWalletServiceUnitTest, MAYBE_ShieldAllFunds) {
   keyring_service()->UpdateNextUnusedAddressForZCashAccount(account_id, 1, 0);
 
   ON_CALL(zcash_rpc(), GetLatestBlock(_, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id,
-              ZCashRpc::GetLatestBlockCallback callback) {
-            auto response = zcash::mojom::BlockID::New(
-                2468414u,
-                *PrefixedHexStringToBytes("0x0000000000b9f12d757cf10d5164c8eb2d"
-                                          "ceb79efbebd15939ac0c2ef69857c5"));
-            std::move(callback).Run(std::move(response));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         ZCashRpc::GetLatestBlockCallback callback) {
+        auto response = zcash::mojom::BlockID::New(
+            2468414u,
+            *PrefixedHexStringToBytes("0x0000000000b9f12d757cf10d5164c8eb2d"
+                                      "ceb79efbebd15939ac0c2ef69857c5"));
+        std::move(callback).Run(std::move(response));
+      });
 
   ON_CALL(zcash_rpc(), GetTreeState(_, _, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id, zcash::mojom::BlockIDPtr block_id,
-              ZCashRpc::GetTreeStateCallback callback) {
-            auto tree_state = zcash::mojom::TreeState::New(
-                "main" /* network */, 2468414 /* height */,
-                "0000000000b9f12d757cf10d5164c8eb2dceb79efbebd15939ac0c2ef69857"
-                "c5" /* hash */,
-                1712914512 /* time */,
-                "01740ed9378b958778ac2d8a128e36848f67903994a4cf565b425a53e5affd"
-                "871501473fede979cebe2b429991465790546bef4901f61e778d37d61221e3"
-                "2586105d1a0001cd1db7e5bc10f29fb18c9e55a9e184d766134e87ac4968fb"
-                "b8b844fc0671894a000001ec648eb9058abba1de4682536919524da9ad66ba"
-                "ee597381975ad457e0f7f76b0001dfab397aca94c3d3f406ac25b4d37f29dd"
-                "82f4fa4fd68b6312cbdef65c330e090000000001f5b1b613f54794f437ed0a"
-                "2b77e4fe97ecefb18c2476bf5d3ec87f3c94903d2901067187080be7f0b727"
-                "3e4331b7505d7c985974c9c461fa602d80cc999289432501e3644c42c5d7ec"
-                "d832a2c662dcd397824930ebe37b37bc61ec5af84f724c2571000132c52534"
-                "3fc4ebe79ab6515e9d9fceb916d920394bad5926a1afe7f46badef420001d1"
-                "b36bbba8e6e1be8f09baf2b829bafc4ccd89ad25fb730d2b8a995b60fc3a67"
-                "01d8ccea507421a590ed38116b834189cdc22421b4764179fa4e364803dfa6"
-                "6d56018cf6f5034a55fed59d1d832620916a43c756d2379e50ef9440fc4c3e"
-                "7a29aa2300011619f99023a69bb647eab2d2aa1a73c3673c74bb033c3c4930"
-                "eacda19e6fd93b0000000160272b134ca494b602137d89e528c751c06d3ef4"
-                "a87a45f33af343c15060cc1e" /* sapling tree */,
-                "01f53cd6d046829fa6bde0d6517f00cb395f6276d29f54d6ee8cc03a2589f3"
-                "ad0a01a021c60843a6a4f385a94d8d595ba1135fd2db406e451066fd361907"
-                "cf13a7191f0161e3b206d91efbeef0e45e83127ff401976364df189a2a1762"
-                "cc46b61ce0c61300000138ae9fd5b9da68da1b63af95d4c32863d02729960e"
-                "70c6eb7cc6144ee994ec0301f8e1b87f0a823799d6e516dfdb7e1dd44e2696"
-                "cc82ee6c16a73b22104604ef36000001288222e46d9892f23a2e2d6fbf6e93"
-                "31f6aa139f2ca3e7e0e7e1fc83c7778708016c33eca8e2b92ca46f0cdfd799"
-                "5778fd0eb625df98f488ab1d1a90fa8825b43f00010d2fb3b0880ce34e2643"
-                "18a8faeace5e051b47afcbcba1edfab81aa66bd7ff2f00000001be7e467513"
-                "4c4441539879962acf4c9ce2523471c82f11a2bfe90d910e5ac11901d38650"
-                "8c9fabdc60836bfe3c7251fcbdd4617180a804d40fa29dc25fb9c0aa3401cf"
-                "3bf92f69798e68555548afcce1648add1fb2548d64fa9a1ec22a3e26e78901"
-                "01e637281deb58dff0c44ba13149b784a95da1b493005efd057e6f4ac20ef5"
-                "d81d000001cc2dcaa338b312112db04b435a706d63244dd435238f0aa1e9e1"
-                "598d35470810012dcc4273c8a0ed2337ecf7879380a07e7d427c7f9d82e538"
-                "002bd1442978402c01daf63debf5b40df902dae98dadc029f281474d190cdd"
-                "ecef1b10653248a234150001e2bca6a8d987d668defba89dc082196a922634"
-                "ed88e065c669e526bb8815ee1b000000000000" /* orchard tree */);
-            std::move(callback).Run(std::move(tree_state));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         zcash::mojom::BlockIDPtr block_id,
+                         ZCashRpc::GetTreeStateCallback callback) {
+        auto tree_state = zcash::mojom::TreeState::New(
+            "main" /* network */, 2468414 /* height */,
+            "0000000000b9f12d757cf10d5164c8eb2dceb79efbebd15939ac0c2ef69857"
+            "c5" /* hash */,
+            1712914512 /* time */,
+            "01740ed9378b958778ac2d8a128e36848f67903994a4cf565b425a53e5affd"
+            "871501473fede979cebe2b429991465790546bef4901f61e778d37d61221e3"
+            "2586105d1a0001cd1db7e5bc10f29fb18c9e55a9e184d766134e87ac4968fb"
+            "b8b844fc0671894a000001ec648eb9058abba1de4682536919524da9ad66ba"
+            "ee597381975ad457e0f7f76b0001dfab397aca94c3d3f406ac25b4d37f29dd"
+            "82f4fa4fd68b6312cbdef65c330e090000000001f5b1b613f54794f437ed0a"
+            "2b77e4fe97ecefb18c2476bf5d3ec87f3c94903d2901067187080be7f0b727"
+            "3e4331b7505d7c985974c9c461fa602d80cc999289432501e3644c42c5d7ec"
+            "d832a2c662dcd397824930ebe37b37bc61ec5af84f724c2571000132c52534"
+            "3fc4ebe79ab6515e9d9fceb916d920394bad5926a1afe7f46badef420001d1"
+            "b36bbba8e6e1be8f09baf2b829bafc4ccd89ad25fb730d2b8a995b60fc3a67"
+            "01d8ccea507421a590ed38116b834189cdc22421b4764179fa4e364803dfa6"
+            "6d56018cf6f5034a55fed59d1d832620916a43c756d2379e50ef9440fc4c3e"
+            "7a29aa2300011619f99023a69bb647eab2d2aa1a73c3673c74bb033c3c4930"
+            "eacda19e6fd93b0000000160272b134ca494b602137d89e528c751c06d3ef4"
+            "a87a45f33af343c15060cc1e" /* sapling tree */,
+            "01f53cd6d046829fa6bde0d6517f00cb395f6276d29f54d6ee8cc03a2589f3"
+            "ad0a01a021c60843a6a4f385a94d8d595ba1135fd2db406e451066fd361907"
+            "cf13a7191f0161e3b206d91efbeef0e45e83127ff401976364df189a2a1762"
+            "cc46b61ce0c61300000138ae9fd5b9da68da1b63af95d4c32863d02729960e"
+            "70c6eb7cc6144ee994ec0301f8e1b87f0a823799d6e516dfdb7e1dd44e2696"
+            "cc82ee6c16a73b22104604ef36000001288222e46d9892f23a2e2d6fbf6e93"
+            "31f6aa139f2ca3e7e0e7e1fc83c7778708016c33eca8e2b92ca46f0cdfd799"
+            "5778fd0eb625df98f488ab1d1a90fa8825b43f00010d2fb3b0880ce34e2643"
+            "18a8faeace5e051b47afcbcba1edfab81aa66bd7ff2f00000001be7e467513"
+            "4c4441539879962acf4c9ce2523471c82f11a2bfe90d910e5ac11901d38650"
+            "8c9fabdc60836bfe3c7251fcbdd4617180a804d40fa29dc25fb9c0aa3401cf"
+            "3bf92f69798e68555548afcce1648add1fb2548d64fa9a1ec22a3e26e78901"
+            "01e637281deb58dff0c44ba13149b784a95da1b493005efd057e6f4ac20ef5"
+            "d81d000001cc2dcaa338b312112db04b435a706d63244dd435238f0aa1e9e1"
+            "598d35470810012dcc4273c8a0ed2337ecf7879380a07e7d427c7f9d82e538"
+            "002bd1442978402c01daf63debf5b40df902dae98dadc029f281474d190cdd"
+            "ecef1b10653248a234150001e2bca6a8d987d668defba89dc082196a922634"
+            "ed88e065c669e526bb8815ee1b000000000000" /* orchard tree */);
+        std::move(callback).Run(std::move(tree_state));
+      });
 
   ON_CALL(zcash_rpc(), GetUtxoList(_, _, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id, const std::string& address,
-              ZCashRpc::GetUtxoListCallback callback) {
-            std::vector<zcash::mojom::ZCashUtxoPtr> utxos;
-            if (address == "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ") {
-              auto utxo = zcash::mojom::ZCashUtxo::New(
-                  "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ" /* address */,
-                  *PrefixedHexStringToBytes(
-                      "0x1b7a7109cec77ae38e57f4f0ec53a4046b08361abb92c62d9567ac"
-                      "e684f633ab") /* tx id */,
-                  0u /* index */,
-                  *PrefixedHexStringToBytes("0x76a914b3b55981e7bf53e10fe51aa4f4"
-                                            "5fdef06dec783d88ac") /*script*/,
-                  500000u /* amount */, 2468320u /* block */);
-              utxos.push_back(std::move(utxo));
-            }
-            auto response =
-                zcash::mojom::GetAddressUtxosResponse::New(std::move(utxos));
-            std::move(callback).Run(std::move(response));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         const std::string& address,
+                         ZCashRpc::GetUtxoListCallback callback) {
+        std::vector<zcash::mojom::ZCashUtxoPtr> utxos;
+        if (address == "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ") {
+          auto utxo = zcash::mojom::ZCashUtxo::New(
+              "t1aFpD4qebqwbSAZLF4E8ZGmrTk36b1cocZ" /* address */,
+              *PrefixedHexStringToBytes(
+                  "0x1b7a7109cec77ae38e57f4f0ec53a4046b08361abb92c62d9567ac"
+                  "e684f633ab") /* tx id */,
+              0u /* index */,
+              *PrefixedHexStringToBytes("0x76a914b3b55981e7bf53e10fe51aa4f4"
+                                        "5fdef06dec783d88ac") /*script*/,
+              500000u /* amount */, 2468320u /* block */);
+          utxos.push_back(std::move(utxo));
+        }
+        auto response =
+            zcash::mojom::GetAddressUtxosResponse::New(std::move(utxos));
+        std::move(callback).Run(std::move(response));
+      });
 
   std::vector<uint8_t> captured_data;
   EXPECT_CALL(zcash_rpc(), SendTransaction(_, _, _))
@@ -2446,138 +2437,136 @@ TEST_F(ZCashWalletServiceUnitTest, MAYBE_SendShieldedFunds) {
       });
 
   ON_CALL(mock_orchard_sync_state(), GetSpendableNotes(_, _))
-      .WillByDefault(  //
-          [&](const mojom::AccountIdPtr& account_id,
-              const OrchardAddrRawPart& internal_addr) {
-            OrchardSyncState::SpendableNotesBundle spendable_notes_bundle;
-            OrchardNote note;
-            base::span(note.addr).copy_from(*PrefixedHexStringToBytes(
-                "0x7d42765851f3db7cfc87a0b9052a579207424fa8c56e3dae8abbf7a6705c"
-                "805f035dda5e793ed48e97bd0f"));
-            note.block_id = 2763539u;
-            base::span(note.nullifier)
-                .copy_from(*PrefixedHexStringToBytes(
-                    "0x14aeb32cc0a16a9d242875b7001e8421a7585980b6186f05a73bbd45"
-                    "2855b43a"));
-            note.amount = 80000u;
-            note.orchard_commitment_tree_position = 48973018u;
-            base::span(note.rho).copy_from(
-                *PrefixedHexStringToBytes("0xdbce238f803b249b7171cf406cd8dae5a0"
-                                          "c1268a7771c9984ee4a0b17619bd0b"));
-            base::span(note.seed).copy_from(
-                *PrefixedHexStringToBytes("0x8bca3a0d5845270f9d5636f51fc285a653"
-                                          "8506746a2507338cbc12ce9d40d119"));
-            spendable_notes_bundle.spendable_notes.push_back(std::move(note));
-            spendable_notes_bundle.anchor_block_id = 2765375u;
-            return spendable_notes_bundle;
-          });
+      .WillByDefault([&](const mojom::AccountIdPtr& account_id,
+                         const OrchardAddrRawPart& internal_addr) {
+        OrchardSyncState::SpendableNotesBundle spendable_notes_bundle;
+        OrchardNote note;
+        base::span(note.addr).copy_from(*PrefixedHexStringToBytes(
+            "0x7d42765851f3db7cfc87a0b9052a579207424fa8c56e3dae8abbf7a6705c"
+            "805f035dda5e793ed48e97bd0f"));
+        note.block_id = 2763539u;
+        base::span(note.nullifier)
+            .copy_from(*PrefixedHexStringToBytes(
+                "0x14aeb32cc0a16a9d242875b7001e8421a7585980b6186f05a73bbd45"
+                "2855b43a"));
+        note.amount = 80000u;
+        note.orchard_commitment_tree_position = 48973018u;
+        base::span(note.rho).copy_from(
+            *PrefixedHexStringToBytes("0xdbce238f803b249b7171cf406cd8dae5a0"
+                                      "c1268a7771c9984ee4a0b17619bd0b"));
+        base::span(note.seed).copy_from(
+            *PrefixedHexStringToBytes("0x8bca3a0d5845270f9d5636f51fc285a653"
+                                      "8506746a2507338cbc12ce9d40d119"));
+        spendable_notes_bundle.spendable_notes.push_back(std::move(note));
+        spendable_notes_bundle.anchor_block_id = 2765375u;
+        return spendable_notes_bundle;
+      });
   ON_CALL(mock_orchard_sync_state(), CalculateWitnessForCheckpoint(_, _, _))
-      .WillByDefault(  //
-          [&](const mojom::AccountIdPtr& account_id,
-              const std::vector<OrchardInput>& notes,
-              uint32_t checkpoint_position) {
-            std::vector<OrchardInput> notes_with_witness = notes;
-            OrchardNoteWitness witness;
-            AppendMerklePath(witness,
-                             "0x69ccc30028f8f48014b90c8df8d383128ee5683db98b86e"
-                             "24b64830fcc32c51e");
-            AppendMerklePath(witness,
-                             "0x3013cca510315350e4000c72f50de9910896d9a68dafbe0"
-                             "145627a76fc258514");
-            AppendMerklePath(witness,
-                             "0x7dfb668f84823c7196fc26a6e7664f9381c6df4de6af26e"
-                             "5d5e34f2d838b0e2d");
-            AppendMerklePath(witness,
-                             "0x58d8d8690b5faa152c41a73aca8a2abf58d17616016b44a"
-                             "85bcf993f193c4612");
-            AppendMerklePath(witness,
-                             "0x997ecea424a5d0eb7b2b2cc8b779525c22c024fca7ce3ef"
-                             "675d7957ecadfe620");
-            AppendMerklePath(witness,
-                             "0x17cb5b1766780f0de0259b643a05093c21bd77982c609d2"
-                             "55260b2869031d935");
-            AppendMerklePath(witness,
-                             "0x4b9ab554ad736be6ccc309694f49d01825251aa376d6cef"
-                             "cf1725fbbebdb0c0a");
-            AppendMerklePath(witness,
-                             "0x5e8be723d9ceb74734eb5356ca66eceaf1a86c4b17a1284"
-                             "cfcaa07b7d2691026");
-            AppendMerklePath(witness,
-                             "0xac6666cddd0b823ee8287ce1c5b47757463e8130b27bfa9"
-                             "dcad48884eadcfd1e");
-            AppendMerklePath(witness,
-                             "0x4a4b16c8ac3b4211d33f5de74c90fb339739597048576c5"
-                             "8f659572e606e0f2e");
-            AppendMerklePath(witness,
-                             "0x75265f7a40040cc3849b2c762386e714703ac5bc63d6049"
-                             "3750833589cb2b110");
-            AppendMerklePath(witness,
-                             "0xd4f485cdc4cb25dec06db85e236ce91a09bc3f0b645cfff"
-                             "74c0cb72e2283d23b");
-            AppendMerklePath(witness,
-                             "0x22ae2800cb93abe63b70c172de70362d9830e5380039888"
-                             "4a7a64ff68ed99e0b");
-            AppendMerklePath(witness,
-                             "0x187110d92672c24cedb0979cdfc917a6053b310d145c031"
-                             "c7292bb1d65b7661b");
-            AppendMerklePath(witness,
-                             "0x0f00a6eccdd778c92fa1940b57175068e04a57b96ad730d"
-                             "b163a948a42baf22c");
-            AppendMerklePath(witness,
-                             "0x63f8dbd10df936f1734973e0b3bd25f4ed440566c923085"
-                             "903f696bc6347ec0f");
-            AppendMerklePath(witness,
-                             "0x6f3f63aab58e63b6449583df5658a91972a20291c6311b5"
-                             "b3e5240aff8d7d002");
-            AppendMerklePath(witness,
-                             "0x12278dfeae9949f887b70ae81e084f8897a5054627acef3"
-                             "efd01c8b29793d522");
-            AppendMerklePath(witness,
-                             "0xca2ced953b7fb95e3ba986333da9e69cd355223c9297310"
-                             "94b6c2174c7638d2e");
-            AppendMerklePath(witness,
-                             "0x60040850b766b126a2b4843fcdfdffa5d5cab3f53bc860a"
-                             "3bef68958b5f06617");
-            AppendMerklePath(witness,
-                             "0x7097b04c2aa045a0deffcaca41c5ac92e694466578f5909"
-                             "e72bb78d33310f705");
-            AppendMerklePath(witness,
-                             "0xcc2dcaa338b312112db04b435a706d63244dd435238f0aa"
-                             "1e9e1598d35470810");
-            AppendMerklePath(witness,
-                             "0x2dcc4273c8a0ed2337ecf7879380a07e7d427c7f9d82e53"
-                             "8002bd1442978402c");
-            AppendMerklePath(witness,
-                             "0xdaf63debf5b40df902dae98dadc029f281474d190cddece"
-                             "f1b10653248a23415");
-            AppendMerklePath(witness,
-                             "0x1f91982912012669f74d0cfa1030ff37b152324e5b8346b"
-                             "3335a0aaeb63a0a2d");
-            AppendMerklePath(witness,
-                             "0xe2bca6a8d987d668defba89dc082196a922634ed88e065c"
-                             "669e526bb8815ee1b");
-            AppendMerklePath(witness,
-                             "0xe8ae2ad91d463bab75ee941d33cc5817b613c63cda943a4"
-                             "c07f600591b088a25");
-            AppendMerklePath(witness,
-                             "0xd53fdee371cef596766823f4a518a583b1158243afe8970"
-                             "0f0da76da46d0060f");
-            AppendMerklePath(witness,
-                             "0x15d2444cefe7914c9a61e829c730eceb216288fee825f6b"
-                             "3b6298f6f6b6bd62e");
-            AppendMerklePath(witness,
-                             "0x4c57a617a0aa10ea7a83aa6b6b0ed685b6a3d9e5b8fd14f"
-                             "56cdc18021b12253f");
-            AppendMerklePath(witness,
-                             "0x3fd4915c19bd831a7920be55d969b2ac23359e2559da77d"
-                             "e2373f06ca014ba27");
-            AppendMerklePath(witness,
-                             "0x87d063cd07ee4944222b7762840eb94c688bec743fa8bdf"
-                             "7715c8fe29f104c2a");
-            witness.position = 48973018u;
-            notes_with_witness[0].witness = std::move(witness);
-            return base::ok(notes_with_witness);
-          });
+      .WillByDefault([&](const mojom::AccountIdPtr& account_id,
+                         const std::vector<OrchardInput>& notes,
+                         uint32_t checkpoint_position) {
+        std::vector<OrchardInput> notes_with_witness = notes;
+        OrchardNoteWitness witness;
+        AppendMerklePath(witness,
+                         "0x69ccc30028f8f48014b90c8df8d383128ee5683db98b86e"
+                         "24b64830fcc32c51e");
+        AppendMerklePath(witness,
+                         "0x3013cca510315350e4000c72f50de9910896d9a68dafbe0"
+                         "145627a76fc258514");
+        AppendMerklePath(witness,
+                         "0x7dfb668f84823c7196fc26a6e7664f9381c6df4de6af26e"
+                         "5d5e34f2d838b0e2d");
+        AppendMerklePath(witness,
+                         "0x58d8d8690b5faa152c41a73aca8a2abf58d17616016b44a"
+                         "85bcf993f193c4612");
+        AppendMerklePath(witness,
+                         "0x997ecea424a5d0eb7b2b2cc8b779525c22c024fca7ce3ef"
+                         "675d7957ecadfe620");
+        AppendMerklePath(witness,
+                         "0x17cb5b1766780f0de0259b643a05093c21bd77982c609d2"
+                         "55260b2869031d935");
+        AppendMerklePath(witness,
+                         "0x4b9ab554ad736be6ccc309694f49d01825251aa376d6cef"
+                         "cf1725fbbebdb0c0a");
+        AppendMerklePath(witness,
+                         "0x5e8be723d9ceb74734eb5356ca66eceaf1a86c4b17a1284"
+                         "cfcaa07b7d2691026");
+        AppendMerklePath(witness,
+                         "0xac6666cddd0b823ee8287ce1c5b47757463e8130b27bfa9"
+                         "dcad48884eadcfd1e");
+        AppendMerklePath(witness,
+                         "0x4a4b16c8ac3b4211d33f5de74c90fb339739597048576c5"
+                         "8f659572e606e0f2e");
+        AppendMerklePath(witness,
+                         "0x75265f7a40040cc3849b2c762386e714703ac5bc63d6049"
+                         "3750833589cb2b110");
+        AppendMerklePath(witness,
+                         "0xd4f485cdc4cb25dec06db85e236ce91a09bc3f0b645cfff"
+                         "74c0cb72e2283d23b");
+        AppendMerklePath(witness,
+                         "0x22ae2800cb93abe63b70c172de70362d9830e5380039888"
+                         "4a7a64ff68ed99e0b");
+        AppendMerklePath(witness,
+                         "0x187110d92672c24cedb0979cdfc917a6053b310d145c031"
+                         "c7292bb1d65b7661b");
+        AppendMerklePath(witness,
+                         "0x0f00a6eccdd778c92fa1940b57175068e04a57b96ad730d"
+                         "b163a948a42baf22c");
+        AppendMerklePath(witness,
+                         "0x63f8dbd10df936f1734973e0b3bd25f4ed440566c923085"
+                         "903f696bc6347ec0f");
+        AppendMerklePath(witness,
+                         "0x6f3f63aab58e63b6449583df5658a91972a20291c6311b5"
+                         "b3e5240aff8d7d002");
+        AppendMerklePath(witness,
+                         "0x12278dfeae9949f887b70ae81e084f8897a5054627acef3"
+                         "efd01c8b29793d522");
+        AppendMerklePath(witness,
+                         "0xca2ced953b7fb95e3ba986333da9e69cd355223c9297310"
+                         "94b6c2174c7638d2e");
+        AppendMerklePath(witness,
+                         "0x60040850b766b126a2b4843fcdfdffa5d5cab3f53bc860a"
+                         "3bef68958b5f06617");
+        AppendMerklePath(witness,
+                         "0x7097b04c2aa045a0deffcaca41c5ac92e694466578f5909"
+                         "e72bb78d33310f705");
+        AppendMerklePath(witness,
+                         "0xcc2dcaa338b312112db04b435a706d63244dd435238f0aa"
+                         "1e9e1598d35470810");
+        AppendMerklePath(witness,
+                         "0x2dcc4273c8a0ed2337ecf7879380a07e7d427c7f9d82e53"
+                         "8002bd1442978402c");
+        AppendMerklePath(witness,
+                         "0xdaf63debf5b40df902dae98dadc029f281474d190cddece"
+                         "f1b10653248a23415");
+        AppendMerklePath(witness,
+                         "0x1f91982912012669f74d0cfa1030ff37b152324e5b8346b"
+                         "3335a0aaeb63a0a2d");
+        AppendMerklePath(witness,
+                         "0xe2bca6a8d987d668defba89dc082196a922634ed88e065c"
+                         "669e526bb8815ee1b");
+        AppendMerklePath(witness,
+                         "0xe8ae2ad91d463bab75ee941d33cc5817b613c63cda943a4"
+                         "c07f600591b088a25");
+        AppendMerklePath(witness,
+                         "0xd53fdee371cef596766823f4a518a583b1158243afe8970"
+                         "0f0da76da46d0060f");
+        AppendMerklePath(witness,
+                         "0x15d2444cefe7914c9a61e829c730eceb216288fee825f6b"
+                         "3b6298f6f6b6bd62e");
+        AppendMerklePath(witness,
+                         "0x4c57a617a0aa10ea7a83aa6b6b0ed685b6a3d9e5b8fd14f"
+                         "56cdc18021b12253f");
+        AppendMerklePath(witness,
+                         "0x3fd4915c19bd831a7920be55d969b2ac23359e2559da77d"
+                         "e2373f06ca014ba27");
+        AppendMerklePath(witness,
+                         "0x87d063cd07ee4944222b7762840eb94c688bec743fa8bdf"
+                         "7715c8fe29f104c2a");
+        witness.position = 48973018u;
+        notes_with_witness[0].witness = std::move(witness);
+        return base::ok(notes_with_witness);
+      });
 
   keyring_service()->Reset();
   keyring_service()->RestoreWallet(kMnemonicGalleryEqual, kTestWalletPassword,
@@ -2587,65 +2576,64 @@ TEST_F(ZCashWalletServiceUnitTest, MAYBE_SendShieldedFunds) {
       GetAccountUtils().EnsureAccount(mojom::KeyringId::kZCashMainnet, 6);
   auto account_id = account->account_id.Clone();
   ON_CALL(zcash_rpc(), GetLatestBlock(_, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id,
-              ZCashRpc::GetLatestBlockCallback callback) {
-            auto response = zcash::mojom::BlockID::New(
-                2769076u,
-                *PrefixedHexStringToBytes("0x000000000003b74b5acfd73e70b1a8e8de"
-                                          "5f5557e560d524037cf40d3190a804"));
-            std::move(callback).Run(std::move(response));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         ZCashRpc::GetLatestBlockCallback callback) {
+        auto response = zcash::mojom::BlockID::New(
+            2769076u,
+            *PrefixedHexStringToBytes("0x000000000003b74b5acfd73e70b1a8e8de"
+                                      "5f5557e560d524037cf40d3190a804"));
+        std::move(callback).Run(std::move(response));
+      });
 
   ON_CALL(zcash_rpc(), GetTreeState(_, _, _))
-      .WillByDefault(  //
-          [&](const std::string& chain_id, zcash::mojom::BlockIDPtr block_id,
-              ZCashRpc::GetTreeStateCallback callback) {
-            auto tree_state = zcash::mojom::TreeState::New(
-                "main" /* network */, 2765375u /* height */,
-                "000000000112b1bc454c12ba83f30ffbd7a345058025b563c448191174d65d"
-                "37" /* hash */,
-                1735298875u /* time */,
-                "01648bd00a4d5db427655c678d9c26a59e09abcc8c8ef9a7f2a1e297517e70"
-                "1257001f017d536e6b7eabbdef129ca34437c8d034beced186c35f5f66cd77"
-                "7c64c2ca9b3a016efbc1e91cbd6995a31c5b0897983ab9b2b96c17c662c71f"
-                "5fdf65aeade92d14017b331d294c0e337adcd246b21374e64b910cfc517080"
-                "09d0e0debe917f15ef03015f7f9d6a0e4a9dc8fba2dee53f1bae480c00c7c8"
-                "2cfafa40517f654dbd10d60e01b7bc0e9de66553b16e8232cea0234426708a"
-                "5c69579fb86742d0654e812acf5e019fda3522805f03cf00697404f2dac8a6"
-                "9c9311ac6acb1f1fc9ca80f8f1012830011cd5b744f9cbf8714ba0eaab9bdc"
-                "8cb4e30b7cf3ea8207bf955da49be3c3c9230158722d8666ffd6429f8dac66"
-                "8a521406a8c88292f7f55cb15d93919af7d9f655011a932b1d84e39121c34f"
-                "316343c12c4d0ff98ca14aea2b445fc86e4f252e773d0001a6ab94f6c08c3f"
-                "5631fbff992a0ad6060a974774bb0aaab45feae601b6d20a3e01381db5696e"
-                "399cba5c84b9798fc00081c67622074ef6aabeedc8e0dd7478c334017b8476"
-                "7ca227e22f8192b542c0688d413316e34c2059335311b1188a9c0e9c640159"
-                "ce19fb2d0c0b844f38a48379313529a5a08c150fc62e174d17b00c99d54d0f"
-                "018de4b3e39611e40a92dc0e1214110e088110ac37dc21f3f1d9f7a449447f"
-                "6a700000017d1ce2f0839bdbf1bad7ae37f845e7fe2116e0c1197536bfbad5"
-                "49f3876c3c590000013e2598f743726006b8de42476ed56a55a75629a7b82e"
-                "430c4e7c101a69e9b02a011619f99023a69bb647eab2d2aa1a73c3673c74bb"
-                "033c3c4930eacda19e6fd93b0000000160272b134ca494b602137d89e528c7"
-                "51c06d3ef4a87a45f33af343c15060cc1e0000000000",
-                "0186d941a3b8736a930cb42ba0f5401ecf11ed23d110439c94830215614080"
-                "4f25001f013797643dbbf53668419a775bcb9e952d48c9e1b3b87dba09246d"
-                "1151a94bfa2f01c41cd6f8852d94aa243c8c09123c5fd0272333dc50c5909e"
-                "2ec3e31e50226e3d014244cfb4e26114a03190f5a6c98a972b6236a1609e94"
-                "b71ee4d34fd61f2e5e2e00017a00225e7a25a7acc77283bf8bffb2ff4b71ec"
-                "bca92810c27f15cf9840e1a312000001a8ab4951a8a3ca00d0fb151a18f130"
-                "d616a8943849f96e10ab77c3021e6f92250000018c7625575f2bb3a042b706"
-                "61de0b01be0795b6590a9f21c504e86acdde863d3a0000010f00a6eccdd778"
-                "c92fa1940b57175068e04a57b96ad730db163a948a42baf22c00016f3f63aa"
-                "b58e63b6449583df5658a91972a20291c6311b5b3e5240aff8d7d002011227"
-                "8dfeae9949f887b70ae81e084f8897a5054627acef3efd01c8b29793d52200"
-                "0160040850b766b126a2b4843fcdfdffa5d5cab3f53bc860a3bef68958b5f0"
-                "66170001cc2dcaa338b312112db04b435a706d63244dd435238f0aa1e9e159"
-                "8d35470810012dcc4273c8a0ed2337ecf7879380a07e7d427c7f9d82e53800"
-                "2bd1442978402c01daf63debf5b40df902dae98dadc029f281474d190cddec"
-                "ef1b10653248a234150001e2bca6a8d987d668defba89dc082196a922634ed"
-                "88e065c669e526bb8815ee1b000000000000");
-            std::move(callback).Run(std::move(tree_state));
-          });
+      .WillByDefault([&](const std::string& chain_id,
+                         zcash::mojom::BlockIDPtr block_id,
+                         ZCashRpc::GetTreeStateCallback callback) {
+        auto tree_state = zcash::mojom::TreeState::New(
+            "main" /* network */, 2765375u /* height */,
+            "000000000112b1bc454c12ba83f30ffbd7a345058025b563c448191174d65d"
+            "37" /* hash */,
+            1735298875u /* time */,
+            "01648bd00a4d5db427655c678d9c26a59e09abcc8c8ef9a7f2a1e297517e70"
+            "1257001f017d536e6b7eabbdef129ca34437c8d034beced186c35f5f66cd77"
+            "7c64c2ca9b3a016efbc1e91cbd6995a31c5b0897983ab9b2b96c17c662c71f"
+            "5fdf65aeade92d14017b331d294c0e337adcd246b21374e64b910cfc517080"
+            "09d0e0debe917f15ef03015f7f9d6a0e4a9dc8fba2dee53f1bae480c00c7c8"
+            "2cfafa40517f654dbd10d60e01b7bc0e9de66553b16e8232cea0234426708a"
+            "5c69579fb86742d0654e812acf5e019fda3522805f03cf00697404f2dac8a6"
+            "9c9311ac6acb1f1fc9ca80f8f1012830011cd5b744f9cbf8714ba0eaab9bdc"
+            "8cb4e30b7cf3ea8207bf955da49be3c3c9230158722d8666ffd6429f8dac66"
+            "8a521406a8c88292f7f55cb15d93919af7d9f655011a932b1d84e39121c34f"
+            "316343c12c4d0ff98ca14aea2b445fc86e4f252e773d0001a6ab94f6c08c3f"
+            "5631fbff992a0ad6060a974774bb0aaab45feae601b6d20a3e01381db5696e"
+            "399cba5c84b9798fc00081c67622074ef6aabeedc8e0dd7478c334017b8476"
+            "7ca227e22f8192b542c0688d413316e34c2059335311b1188a9c0e9c640159"
+            "ce19fb2d0c0b844f38a48379313529a5a08c150fc62e174d17b00c99d54d0f"
+            "018de4b3e39611e40a92dc0e1214110e088110ac37dc21f3f1d9f7a449447f"
+            "6a700000017d1ce2f0839bdbf1bad7ae37f845e7fe2116e0c1197536bfbad5"
+            "49f3876c3c590000013e2598f743726006b8de42476ed56a55a75629a7b82e"
+            "430c4e7c101a69e9b02a011619f99023a69bb647eab2d2aa1a73c3673c74bb"
+            "033c3c4930eacda19e6fd93b0000000160272b134ca494b602137d89e528c7"
+            "51c06d3ef4a87a45f33af343c15060cc1e0000000000",
+            "0186d941a3b8736a930cb42ba0f5401ecf11ed23d110439c94830215614080"
+            "4f25001f013797643dbbf53668419a775bcb9e952d48c9e1b3b87dba09246d"
+            "1151a94bfa2f01c41cd6f8852d94aa243c8c09123c5fd0272333dc50c5909e"
+            "2ec3e31e50226e3d014244cfb4e26114a03190f5a6c98a972b6236a1609e94"
+            "b71ee4d34fd61f2e5e2e00017a00225e7a25a7acc77283bf8bffb2ff4b71ec"
+            "bca92810c27f15cf9840e1a312000001a8ab4951a8a3ca00d0fb151a18f130"
+            "d616a8943849f96e10ab77c3021e6f92250000018c7625575f2bb3a042b706"
+            "61de0b01be0795b6590a9f21c504e86acdde863d3a0000010f00a6eccdd778"
+            "c92fa1940b57175068e04a57b96ad730db163a948a42baf22c00016f3f63aa"
+            "b58e63b6449583df5658a91972a20291c6311b5b3e5240aff8d7d002011227"
+            "8dfeae9949f887b70ae81e084f8897a5054627acef3efd01c8b29793d52200"
+            "0160040850b766b126a2b4843fcdfdffa5d5cab3f53bc860a3bef68958b5f0"
+            "66170001cc2dcaa338b312112db04b435a706d63244dd435238f0aa1e9e159"
+            "8d35470810012dcc4273c8a0ed2337ecf7879380a07e7d427c7f9d82e53800"
+            "2bd1442978402c01daf63debf5b40df902dae98dadc029f281474d190cddec"
+            "ef1b10653248a234150001e2bca6a8d987d668defba89dc082196a922634ed"
+            "88e065c669e526bb8815ee1b000000000000");
+        std::move(callback).Run(std::move(tree_state));
+      });
 
   std::optional<ZCashTransaction> created_transaction;
   base::MockCallback<ZCashWalletService::CreateTransactionCallback>

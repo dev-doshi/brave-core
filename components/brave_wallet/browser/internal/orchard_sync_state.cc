@@ -24,6 +24,8 @@ constexpr char kOrchardDatabaseName[] = "orchard.db";
 // static
 scoped_refptr<base::SequencedTaskRunner>
 OrchardSyncState::CreateSyncStateSequence() {
+  // TODO(https://github.com/brave/brave-browser/issues/52985): should have more
+  // traits.
   return base::ThreadPool::CreateSequencedTaskRunner({base::MayBlock()});
 }
 
