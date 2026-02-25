@@ -10,25 +10,21 @@
 #include <string>
 
 #include "base/json/json_writer.h"
-#include "brave/components/endpoint_client/is_request.h"
-#include "brave/components/endpoint_client/maybe_strip_with_headers.h"
+#include "brave/components/endpoint_client/is_request_body.h"
 
 namespace endpoint_client::detail {
 
-template <typename Request>
-  requires IsRequest<MaybeStripWithHeaders<Request>, JSON>
-std::optional<std::string> Serialize(const Request& request) {
-  const auto dict = request.body.ToValue();
-  return !dict.empty() ? std::optional(base::WriteJson(dict).value_or(""))
-                       : std::nullopt;
+template <IsRequestBody<JSON> RequestBody>
+std::optional<std::string> Serialize(const RequestBody& request_body) {
+  const auto dict = request_body.ToValue();
+  return !dict.empty() ? base::WriteJson(dict).value_or("")
+                       : std::optional<std::string>();
 }
 
-template <typename Request>
-  requires IsRequest<MaybeStripWithHeaders<Request>, Protobuf>
-std::optional<std::string> Serialize(const Request& request) {
-  return request.body.ByteSizeLong() > 0
-             ? std::optional(request.body.SerializeAsString())
-             : std::nullopt;
+template <IsRequestBody<Protobuf> RequestBody>
+std::optional<std::string> Serialize(const RequestBody& request_body) {
+  return request_body.ByteSizeLong() ? request_body.SerializeAsString()
+                                     : std::optional<std::string>();
 }
 
 }  // namespace endpoint_client::detail
