@@ -25,13 +25,13 @@ concept HasEndpointStructure = requires {
 
 template <typename T>
 concept IsJSONEndpoint =
-    HasEndpointStructure<T> && IsRequest<JSON, typename T::Request> &&
-    IsResponse<JSON, typename T::Response>;
+    HasEndpointStructure<T> && IsRequest<typename T::Request, JSON> &&
+    IsResponse<typename T::Response, JSON>;
 
 template <typename T>
 concept IsProtobufEndpoint =
-    HasEndpointStructure<T> && IsRequest<Protobuf, typename T::Request> &&
-    IsResponse<Protobuf, typename T::Response>;
+    HasEndpointStructure<T> && IsRequest<typename T::Request, Protobuf> &&
+    IsResponse<typename T::Response, Protobuf>;
 
 }  // namespace detail
 

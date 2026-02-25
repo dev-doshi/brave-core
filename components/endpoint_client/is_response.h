@@ -14,14 +14,13 @@ namespace endpoint_client::detail {
 template <typename...>
 inline constexpr bool kIsResponse = false;
 
-template <typename BodyType,
-          IsResponseBody<BodyType> T,
-          IsResponseBody<BodyType> E>
-inline constexpr bool kIsResponse<BodyType, Response<T, E>> = true;
+template <typename T, typename E, typename BodyType>
+  requires(IsResponseBody<T, BodyType> && IsResponseBody<E, BodyType>)
+inline constexpr bool kIsResponse<Response<T, E>, BodyType> = true;
 
 template <typename T>
 inline constexpr bool kIsResponse<T> =
-    kIsResponse<JSON, T> || kIsResponse<Protobuf, T>;
+    kIsResponse<T, JSON> || kIsResponse<T, Protobuf>;
 
 template <typename... Ts>
 concept IsResponse = kIsResponse<Ts...>;

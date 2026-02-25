@@ -19,8 +19,7 @@
 
 namespace endpoint_client::detail {
 
-template <typename Response>
-  requires IsResponse<JSON, Response>
+template <IsResponse<JSON> Response>
 void Deserialize(Response& response, std::optional<std::string> response_body) {
   const bool is_2xx =
       network::IsSuccessfulStatus(CHECK_DEREF(response.status_code));
@@ -41,8 +40,7 @@ void Deserialize(Response& response, std::optional<std::string> response_body) {
   }
 }
 
-template <typename Response>
-  requires IsResponse<Protobuf, Response>
+template <IsResponse<Protobuf> Response>
 void Deserialize(Response& response, std::optional<std::string> response_body) {
   const bool is_2xx =
       network::IsSuccessfulStatus(CHECK_DEREF(response.status_code));

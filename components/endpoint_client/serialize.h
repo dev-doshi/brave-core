@@ -16,7 +16,7 @@
 namespace endpoint_client::detail {
 
 template <typename Request>
-  requires IsRequest<JSON, MaybeStripWithHeaders<Request>>
+  requires IsRequest<MaybeStripWithHeaders<Request>, JSON>
 std::optional<std::string> Serialize(const Request& request) {
   const auto dict = request.body.ToValue();
   return !dict.empty() ? std::optional(base::WriteJson(dict).value_or(""))
@@ -24,7 +24,7 @@ std::optional<std::string> Serialize(const Request& request) {
 }
 
 template <typename Request>
-  requires IsRequest<Protobuf, MaybeStripWithHeaders<Request>>
+  requires IsRequest<MaybeStripWithHeaders<Request>, Protobuf>
 std::optional<std::string> Serialize(const Request& request) {
   return request.body.ByteSizeLong() > 0
              ? std::optional(request.body.SerializeAsString())
