@@ -259,8 +259,8 @@ void BraveAccountService::LoginInitialize(const std::string& email,
         url_loader_factory_, std::move(request),
         base::BindOnce([](Echo::Response response) {
           if (response.body) {
-            auto body = std::move(*response.body)
-                            .value_or(Echo::Response::SuccessBody());
+            const auto body = std::move(*response.body)
+                                  .value_or(Echo::Response::SuccessBody());
             DVLOG(0) << "Echo response - message: " << body.message()
                      << ", id: " << body.id();
           }

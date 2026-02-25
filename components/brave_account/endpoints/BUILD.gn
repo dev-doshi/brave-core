@@ -24,12 +24,12 @@ source_set("endpoints") {
   deps = [ "//brave/components/endpoint_client" ]
 
   public_deps = [
-    "//brave/components/brave_account/endpoints:idl_bodies",
-    "//brave/components/brave_account/endpoints:proto_bodies",
+    "//brave/components/brave_account/endpoints:json_bodies",
+    "//brave/components/brave_account/endpoints:protobuf_bodies",
   ]
 }
 
-generated_types("idl_bodies") {
+generated_types("json_bodies") {
   sources = [
     "auth_logout_bodies.idl",
     "auth_validate_bodies.idl",
@@ -49,7 +49,7 @@ generated_types("idl_bodies") {
   root_namespace = "brave_account::%(namespace)s"
 }
 
-proto_library("proto_bodies") {
+proto_library("protobuf_bodies") {
   sources = [ "echo_bodies.proto" ]
 }
 
