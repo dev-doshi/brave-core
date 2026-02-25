@@ -10,20 +10,15 @@
 #include <string>
 #include <type_traits>
 
-#include "base/check_deref.h"
 #include "base/json/json_reader.h"
 #include "base/types/expected.h"
 #include "base/values.h"
 #include "brave/components/endpoint_client/is_response.h"
-#include "services/network/public/cpp/header_util.h"
 
 namespace endpoint_client::detail {
 
 template <IsResponse<JSON> Response>
-void Deserialize(Response& response, std::optional<std::string> response_body) {
-  const bool is_2xx =
-      network::IsSuccessfulStatus(CHECK_DEREF(response.status_code));
-
+auto Deserialize(bool is_2xx, std::optional<std::string> response_body) {
   if (is_2xx ? std::is_empty_v<typename Response::SuccessBody>
              : std::is_empty_v<typename Response::ErrorBody>) {
     response_body = "{}";
@@ -32,19 +27,20 @@ void Deserialize(Response& response, std::optional<std::string> response_body) {
   const auto value =
       base::JSONReader::Read(response_body.value_or(""), base::JSON_PARSE_RFC)
           .value_or(base::Value());
+
+  decltype(Response().body) result;
   if (is_2xx) {
-    response.body = Response::SuccessBody::FromValue(value);
+    result = Response::SuccessBody::FromValue(value);
   } else {
-    response.body = Response::ErrorBody::FromValue(value).transform(
+    result = Response::ErrorBody::FromValue(value).transform(
         [](auto body) { return base::unexpected(std::move(body)); });
   }
+
+  return result;
 }
 
 template <IsResponse<Protobuf> Response>
-void Deserialize(Response& response, std::optional<std::string> response_body) {
-  const bool is_2xx =
-      network::IsSuccessfulStatus(CHECK_DEREF(response.status_code));
-
+auto Deserialize(bool is_2xx, std::optional<std::string> response_body) {
   if (is_2xx ? std::is_empty_v<typename Response::SuccessBody>
              : std::is_empty_v<typename Response::ErrorBody>) {
     response_body = "";
@@ -56,14 +52,17 @@ void Deserialize(Response& response, std::optional<std::string> response_body) {
                : std::nullopt;
   };
 
+  decltype(Response().body) result;
   if (is_2xx) {
-    response.body = deserialize(typename Response::SuccessBody());
+    result = deserialize(typename Response::SuccessBody());
   } else {
-    response.body =
+    result =
         deserialize(typename Response::ErrorBody()).transform([](auto body) {
           return base::unexpected(std::move(body));
         });
   }
+
+  return result;
 }
 
 }  // namespace endpoint_client::detail

@@ -33,6 +33,7 @@
 #include "net/http/http_request_headers.h"
 #include "net/http/http_response_headers.h"
 #include "net/traffic_annotation/network_traffic_annotation.h"
+#include "services/network/public/cpp/header_util.h"
 #include "services/network/public/cpp/resource_request.h"
 #include "services/network/public/cpp/shared_url_loader_factory.h"
 #include "services/network/public/cpp/simple_url_loader.h"
@@ -189,7 +190,9 @@ class Client {
       response.headers = std::move(headers);
     }
 
-    detail::Deserialize(response, std::move(response_body));
+    response.body = detail::Deserialize<Response>(
+        network::IsSuccessfulStatus(*response.status_code),
+        std::move(response_body));
 
     std::move(callback).Run(std::move(response));
   }
