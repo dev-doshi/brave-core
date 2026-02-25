@@ -21,7 +21,6 @@ source_set("endpoint_client") {
     "request_handle.h",
     "request_types.h",
     "response.h",
-    "serialize.h",
     "static_string.h",
     "with_headers.h",
   ]

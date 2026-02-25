@@ -8,8 +8,10 @@
 
 #include <concepts>
 #include <optional>
+#include <string>
 #include <type_traits>
 
+#include "base/json/json_writer.h"
 #include "base/values.h"
 
 namespace endpoint_client::detail {
@@ -25,6 +27,14 @@ struct JSON {
   static constexpr bool kIsResponseBody = requires(const base::Value& value) {
     { T::FromValue(value) } -> std::same_as<std::optional<T>>;
   };
+
+  template <typename RequestBody>
+    requires kIsRequestBody<RequestBody>
+  static std::optional<std::string> Serialize(const RequestBody& request_body) {
+    const auto dict = request_body.ToValue();
+    return !dict.empty() ? base::WriteJson(dict).value_or("")
+                         : std::optional<std::string>();
+  }
 };
 
 }  // namespace endpoint_client::detail

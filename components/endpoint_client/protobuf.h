@@ -7,6 +7,7 @@
 #define BRAVE_COMPONENTS_ENDPOINT_CLIENT_PROTOBUF_H_
 
 #include <concepts>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -29,6 +30,13 @@ struct Protobuf {
         decltype(static_cast<bool (T::*)(std::string_view)>(
             &T::ParseFromString))>;
   };
+
+  template <typename RequestBody>
+    requires kIsRequestBody<RequestBody>
+  static std::optional<std::string> Serialize(const RequestBody& request_body) {
+    return request_body.ByteSizeLong() ? request_body.SerializeAsString()
+                                       : std::optional<std::string>();
+  }
 };
 
 }  // namespace endpoint_client::detail

@@ -26,7 +26,6 @@
 #include "brave/components/endpoint_client/maybe_strip_with_headers.h"
 #include "brave/components/endpoint_client/request_handle.h"
 #include "brave/components/endpoint_client/response.h"
-#include "brave/components/endpoint_client/serialize.h"
 #include "brave/components/endpoint_client/with_headers.h"
 #include "net/base/load_flags.h"
 #include "net/base/net_errors.h"
@@ -120,7 +119,20 @@ class Client {
         static_cast<net::NetworkTrafficAnnotationTag>(
             request.network_traffic_annotation_tag));
     simple_url_loader->SetAllowHttpErrorResults(true);
-    if (auto upload_data = detail::Serialize(request.body); upload_data) {
+
+    auto upload_data = [&] {
+      if constexpr (detail::IsRequestBody<typename Request::Body,
+                                          detail::JSON>) {
+        return detail::JSON::Serialize(request.body);
+      } else if constexpr (detail::IsRequestBody<typename Request::Body,
+                                                 detail::Protobuf>) {
+        return detail::Protobuf::Serialize(request.body);
+      } else {
+        static_assert(false, "Request::Body must be JSON or Protobuf!");
+      }
+    }();
+
+    if (upload_data) {
       CHECK(!upload_data->empty()) << "Failed to serialize request body!";
       simple_url_loader->AttachStringForUpload(std::move(*upload_data),
                                                Request::ContentType());
