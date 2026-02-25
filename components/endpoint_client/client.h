@@ -23,6 +23,7 @@
 #include "base/types/is_instantiation.h"
 #include "brave/components/endpoint_client/is_endpoint.h"
 #include "brave/components/endpoint_client/is_request_body.h"
+#include "brave/components/endpoint_client/is_response.h"
 #include "brave/components/endpoint_client/json.h"
 #include "brave/components/endpoint_client/maybe_strip_with_headers.h"
 #include "brave/components/endpoint_client/protobuf.h"

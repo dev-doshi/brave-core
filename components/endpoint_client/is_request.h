@@ -11,17 +11,26 @@
 
 namespace endpoint_client::detail {
 
+// Primary template: a type does not satisfy IsRequest unless
+// matched by one of the partial specializations below.
 template <typename...>
 inline constexpr bool kIsRequest = false;
 
+// Partial specialization: Request<T, M> satisfies IsRequest
+// for a given BodyType if T models a valid request body
+// for that BodyType.
 template <typename T, Method M, typename BodyType>
   requires IsRequestBody<T, BodyType>
 inline constexpr bool kIsRequest<Request<T, M>, BodyType> = true;
 
+// Partial specialization (single-argument form): a type T satisfies IsRequest
+// if it models either a JSON-backed or Protobuf-backed request.
 template <typename T>
 inline constexpr bool kIsRequest<T> =
     kIsRequest<T, JSON> || kIsRequest<T, Protobuf>;
 
+// Concept: a type satisfies IsRequest if
+// its kIsRequest specialization evaluates to true.
 template <typename... Ts>
 concept IsRequest = kIsRequest<Ts...>;
 
