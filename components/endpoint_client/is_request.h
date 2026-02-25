@@ -6,12 +6,23 @@
 #ifndef BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_REQUEST_H_
 #define BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_REQUEST_H_
 
-#include "brave/components/endpoint_client/is_request_of.h"
+#include "brave/components/endpoint_client/is_request_body.h"
+#include "brave/components/endpoint_client/request.h"
 
 namespace endpoint_client::detail {
 
+template <typename...>
+inline constexpr bool kIsRequest = false;
+
+template <typename BodyType, IsRequestBodyOf<BodyType> T, Method M>
+inline constexpr bool kIsRequest<BodyType, Request<T, M>> = true;
+
 template <typename T>
-concept IsRequest = IsRequestOf<T, JSON> || IsRequestOf<T, Protobuf>;
+inline constexpr bool kIsRequest<T> =
+    kIsRequest<JSON, T> || kIsRequest<Protobuf, T>;
+
+template <typename... Ts>
+concept IsRequest = kIsRequest<Ts...>;
 
 }  // namespace endpoint_client::detail
 

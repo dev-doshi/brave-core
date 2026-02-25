@@ -10,13 +10,13 @@
 #include <string>
 
 #include "base/json/json_writer.h"
-#include "brave/components/endpoint_client/is_request_of.h"
+#include "brave/components/endpoint_client/is_request.h"
 #include "brave/components/endpoint_client/maybe_strip_with_headers.h"
 
 namespace endpoint_client::detail {
 
 template <typename Request>
-  requires IsRequestOf<MaybeStripWithHeaders<Request>, JSON>
+  requires IsRequest<JSON, MaybeStripWithHeaders<Request>>
 std::optional<std::string> Serialize(const Request& request) {
   const auto dict = request.body.ToValue();
   return !dict.empty() ? std::optional(base::WriteJson(dict).value_or(""))
@@ -24,7 +24,7 @@ std::optional<std::string> Serialize(const Request& request) {
 }
 
 template <typename Request>
-  requires IsRequestOf<MaybeStripWithHeaders<Request>, Protobuf>
+  requires IsRequest<Protobuf, MaybeStripWithHeaders<Request>>
 std::optional<std::string> Serialize(const Request& request) {
   return request.body.ByteSizeLong() > 0
              ? std::optional(request.body.SerializeAsString())
