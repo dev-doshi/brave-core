@@ -64,11 +64,11 @@ struct Request {
 
   static constexpr std::string_view ContentType() {
     if constexpr (IsRequestBody<T, JSON>) {
-      return "application/json";
+      return JSON::ContentType();
     } else if constexpr (IsRequestBody<T, Protobuf>) {
-      return "application/x-protobuf";
+      return Protobuf::ContentType();
     } else {
-      static_assert(false, "Unhandled IsRequestBody!");
+      static_assert(false, "T must be JSON or Protobuf!");
     }
   }
 

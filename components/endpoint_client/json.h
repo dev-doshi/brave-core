@@ -30,6 +30,8 @@ struct JSON {
     { T::FromValue(value) } -> std::same_as<std::optional<T>>;
   };
 
+  static constexpr std::string_view ContentType() { return "application/json"; }
+
   template <typename RequestBody>
     requires kIsRequestBody<RequestBody>
   static std::optional<std::string> Serialize(const RequestBody& request_body) {

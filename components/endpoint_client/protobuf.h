@@ -20,8 +20,8 @@ struct Protobuf {
   template <typename T>
   static constexpr bool kIsRequestBody = requires(const T t) {
     { t.ByteSizeLong() } -> std::same_as<std::size_t>;
-    { t.SerializeAsString() } -> std::same_as<std::string>;
     requires std::is_member_function_pointer_v<decltype(&T::ByteSizeLong)>;
+    { t.SerializeAsString() } -> std::same_as<std::string>;
     requires std::is_member_function_pointer_v<decltype(&T::SerializeAsString)>;
   };
 
@@ -32,6 +32,10 @@ struct Protobuf {
         decltype(static_cast<bool (T::*)(std::string_view)>(
             &T::ParseFromString))>;
   };
+
+  static constexpr std::string_view ContentType() {
+    return "application/x-protobuf";
+  }
 
   template <typename RequestBody>
     requires kIsRequestBody<RequestBody>
