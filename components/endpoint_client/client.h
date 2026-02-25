@@ -21,7 +21,6 @@
 #include "base/memory/scoped_refptr.h"
 #include "base/task/sequenced_task_runner.h"
 #include "base/types/is_instantiation.h"
-#include "brave/components/endpoint_client/deserialize.h"
 #include "brave/components/endpoint_client/is_endpoint.h"
 #include "brave/components/endpoint_client/maybe_strip_with_headers.h"
 #include "brave/components/endpoint_client/request_handle.h"
@@ -202,9 +201,18 @@ class Client {
       response.headers = std::move(headers);
     }
 
-    response.body = detail::Deserialize<Response>(
-        network::IsSuccessfulStatus(*response.status_code),
-        std::move(response_body));
+    response.body = [&] {
+      const bool is_2xx = network::IsSuccessfulStatus(*response.status_code);
+      if constexpr (detail::IsResponse<Response, detail::JSON>) {
+        return detail::JSON::Deserialize<Response>(is_2xx,
+                                                   std::move(response_body));
+      } else if constexpr (detail::IsResponse<Response, detail::Protobuf>) {
+        return detail::Protobuf::Deserialize<Response>(
+            is_2xx, std::move(response_body));
+      } else {
+        static_assert(false, "Response must be JSON or Protobuf!");
+      }
+    }();
 
     std::move(callback).Run(std::move(response));
   }

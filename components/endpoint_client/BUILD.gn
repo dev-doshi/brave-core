@@ -7,7 +7,6 @@ source_set("endpoint_client") {
   sources = [
     "brave_endpoint.h",
     "client.h",
-    "deserialize.h",
     "is_endpoint.h",
     "is_request.h",
     "is_request_body.h",

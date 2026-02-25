@@ -11,7 +11,9 @@
 #include <string>
 #include <type_traits>
 
+#include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
+#include "base/types/expected.h"
 #include "base/values.h"
 
 namespace endpoint_client::detail {
@@ -34,6 +36,31 @@ struct JSON {
     const auto dict = request_body.ToValue();
     return !dict.empty() ? base::WriteJson(dict).value_or("")
                          : std::optional<std::string>();
+  }
+
+  template <typename Response>
+    requires(kIsResponseBody<typename Response::SuccessBody> &&
+             kIsResponseBody<typename Response::ErrorBody>)
+  static auto Deserialize(bool is_2xx,
+                          std::optional<std::string> response_body) {
+    if (is_2xx ? std::is_empty_v<typename Response::SuccessBody>
+               : std::is_empty_v<typename Response::ErrorBody>) {
+      response_body = "{}";
+    }
+
+    const auto value =
+        base::JSONReader::Read(response_body.value_or(""), base::JSON_PARSE_RFC)
+            .value_or(base::Value());
+
+    decltype(Response().body) result;
+    if (is_2xx) {
+      result = Response::SuccessBody::FromValue(value);
+    } else {
+      result = Response::ErrorBody::FromValue(value).transform(
+          [](auto body) { return base::unexpected(std::move(body)); });
+    }
+
+    return result;
   }
 };
 

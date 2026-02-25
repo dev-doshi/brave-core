@@ -12,6 +12,8 @@
 #include <string_view>
 #include <type_traits>
 
+#include "base/types/expected.h"
+
 namespace endpoint_client::detail {
 
 struct Protobuf {
@@ -36,6 +38,35 @@ struct Protobuf {
   static std::optional<std::string> Serialize(const RequestBody& request_body) {
     return request_body.ByteSizeLong() ? request_body.SerializeAsString()
                                        : std::optional<std::string>();
+  }
+
+  template <typename Response>
+    requires(kIsResponseBody<typename Response::SuccessBody> &&
+             kIsResponseBody<typename Response::ErrorBody>)
+  static auto Deserialize(bool is_2xx,
+                          std::optional<std::string> response_body) {
+    if (is_2xx ? std::is_empty_v<typename Response::SuccessBody>
+               : std::is_empty_v<typename Response::ErrorBody>) {
+      response_body = "";
+    }
+
+    const auto deserialize = [&](auto body) {
+      return body.ParseFromString(response_body.value_or(""))
+                 ? std::optional(std::move(body))
+                 : std::nullopt;
+    };
+
+    decltype(Response().body) result;
+    if (is_2xx) {
+      result = deserialize(typename Response::SuccessBody());
+    } else {
+      result =
+          deserialize(typename Response::ErrorBody()).transform([](auto body) {
+            return base::unexpected(std::move(body));
+          });
+    }
+
+    return result;
   }
 };
 
