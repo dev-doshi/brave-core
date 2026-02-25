@@ -15,8 +15,8 @@ template <typename...>
 inline constexpr bool kIsResponse = false;
 
 template <typename BodyType,
-          IsResponseBodyOf<BodyType> T,
-          IsResponseBodyOf<BodyType> E>
+          IsResponseBody<BodyType> T,
+          IsResponseBody<BodyType> E>
 inline constexpr bool kIsResponse<BodyType, Response<T, E>> = true;
 
 template <typename T>

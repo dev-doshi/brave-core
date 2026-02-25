@@ -14,7 +14,7 @@ namespace endpoint_client::detail {
 template <typename...>
 inline constexpr bool kIsRequest = false;
 
-template <typename BodyType, IsRequestBodyOf<BodyType> T, Method M>
+template <typename BodyType, IsRequestBody<BodyType> T, Method M>
 inline constexpr bool kIsRequest<BodyType, Request<T, M>> = true;
 
 template <typename T>

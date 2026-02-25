@@ -11,12 +11,19 @@
 
 namespace endpoint_client::detail {
 
+template <typename...>
+inline constexpr bool kIsRequestBody = false;
+
 template <typename T, typename BodyType>
-concept IsRequestBodyOf = BodyType::template kIsRequestBody<T>;
+inline constexpr bool kIsRequestBody<T, BodyType> =
+    BodyType::template kIsRequestBody<T>;
 
 template <typename T>
-concept IsRequestBody =
-    IsRequestBodyOf<T, JSON> || IsRequestBodyOf<T, Protobuf>;
+inline constexpr bool kIsRequestBody<T> =
+    kIsRequestBody<T, JSON> || kIsRequestBody<T, Protobuf>;
+
+template <typename... Ts>
+concept IsRequestBody = kIsRequestBody<Ts...>;
 
 }  // namespace endpoint_client::detail
 
