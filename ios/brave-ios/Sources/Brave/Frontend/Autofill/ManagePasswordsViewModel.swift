@@ -40,18 +40,6 @@ class ManagePasswordsViewModel {
     }
   }
 
-  private var allowedList: [CWVPassword] = [] {
-    didSet {
-      savedGroups = allowedList.groupedByDomain()
-      applyFilter()
-    }
-  }
-  private var blockedList: [CWVPassword] = [] {
-    didSet {
-      blockedGroups = blockedList.groupedByDomain()
-      applyFilter()
-    }
-  }
   var isRefreshing: Bool = false
   var savedGroups: [(domain: String, credentials: [CWVPassword])] = []
   var blockedGroups: [(domain: String, credentials: [CWVPassword])] = []
@@ -91,7 +79,13 @@ class ManagePasswordsViewModel {
     autofillDataManager.remove(observer)
   }
 
-  /// Filters `savedGroups` and `blockedGroups` in a single pass using the current `searchText`,
+  private func updateGroups(allowed: [CWVPassword], blocked: [CWVPassword]) {
+    savedGroups = allowed.groupedByDomain()
+    blockedGroups = blocked.groupedByDomain()
+    applyFilter()
+  }
+
+  /// Filters `savedGroups` and `blockedGroups`  using the current `searchText`,
   /// lowercasing the query once and matching against both domain and username.
   /// When the query is empty the filtered results mirror the full groups unchanged.
   private func applyFilter() {
@@ -122,8 +116,10 @@ class ManagePasswordsViewModel {
     autofillDataManager.fetchPasswords { [weak self] passwords in
       guard let self else { return }
       Task { @MainActor in
-        self.allowedList = passwords.filter { !$0.isBlocked }
-        self.blockedList = passwords.filter { $0.isBlocked }
+        self.updateGroups(
+          allowed: passwords.filter { !$0.isBlocked },
+          blocked: passwords.filter { $0.isBlocked }
+        )
         self.isRefreshing = false
         if self.needsRefetch {
           self.fetchPasswords()
