@@ -7,7 +7,10 @@
 
 #include <utility>
 
+#include "base/check.h"
+#include "base/feature_list.h"
 #include "base/logging.h"
+#include "brave/components/local_ai/core/features.h"
 
 namespace local_ai {
 
@@ -23,6 +26,7 @@ LocalAIService::PendingRequest& LocalAIService::PendingRequest::operator=(
 
 LocalAIService::LocalAIService(BackgroundWebUIFactory factory)
     : background_web_ui_factory_(std::move(factory)) {
+  CHECK(base::FeatureList::IsEnabled(features::kLocalAIModels));
   DVLOG(3) << "LocalAIService created";
 }
 
