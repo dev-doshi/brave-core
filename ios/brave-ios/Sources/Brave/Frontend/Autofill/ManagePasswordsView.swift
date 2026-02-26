@@ -166,7 +166,7 @@ struct ManagePasswordsView: View {
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
         Button {
-          //TODO: Present Detail View or Grouped View
+          //TODO: Present Add Password Form
         } label: {
           Label(Strings.addButtonTitle, braveSystemImage: "leo.plus.add")
         }
