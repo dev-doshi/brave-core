@@ -107,9 +107,7 @@ function AssistantEvent(
       ? completion
       : removeCitationsWithMissingLinks(completion, allowedLinks)
 
-    const processedCompletion = normalizeCitationSpacing(
-      filteredCompletion,
-    )
+    const processedCompletion = normalizeCitationSpacing(filteredCompletion)
 
     const fullText = `${numberedLinks}${removeReasoning(processedCompletion)}`
 
@@ -216,22 +214,23 @@ export default function AssistantResponse(props: AssistantResponseProps) {
       {/* Render deep research progress while research is active.
           Hide once research completes - the final answer streams in
           as standard completion events rendered above. */}
-      {deepResearch.hasDeepResearchEvents && props.isEntryInProgress
+      {deepResearch.hasDeepResearchEvents
+        && props.isEntryInProgress
         && !deepResearch.completeEvent && (
-        <DeepResearchEvent
-          queriesEvent={deepResearch.queriesEvent}
-          thinkingEvents={deepResearch.thinkingEvents}
-          progressEvent={deepResearch.progressEvent}
-          completeEvent={deepResearch.completeEvent}
-          errorEvent={deepResearch.errorEvent}
-          searchStatusEvent={deepResearch.searchStatusEvent}
-          analysisStatusEvent={deepResearch.analysisStatusEvent}
-          iterationCompleteEvent={deepResearch.iterationCompleteEvent}
-          analyzingEvent={deepResearch.analyzingEvent}
-          fetchStatusEvent={deepResearch.fetchStatusEvent}
-          isActive={props.isEntryInProgress}
-        />
-      )}
+          <DeepResearchEvent
+            queriesEvent={deepResearch.queriesEvent}
+            thinkingEvents={deepResearch.thinkingEvents}
+            progressEvent={deepResearch.progressEvent}
+            completeEvent={deepResearch.completeEvent}
+            errorEvent={deepResearch.errorEvent}
+            searchStatusEvent={deepResearch.searchStatusEvent}
+            analysisStatusEvent={deepResearch.analysisStatusEvent}
+            iterationCompleteEvent={deepResearch.iterationCompleteEvent}
+            analyzingEvent={deepResearch.analyzingEvent}
+            fetchStatusEvent={deepResearch.fetchStatusEvent}
+            isActive={props.isEntryInProgress}
+          />
+        )}
 
       {!props.isEntryInProgress && (
         <>
