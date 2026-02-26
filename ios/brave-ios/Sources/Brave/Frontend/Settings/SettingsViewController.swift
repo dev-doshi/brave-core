@@ -1243,8 +1243,7 @@ class SettingsViewController: TableViewController {
               let autofillDataManager = braveCore.defaultWebViewConfiguration.autofillDataManager
             {
               let managePasswordsViewController = ManagePasswordsViewController(
-                autofillDataManager: autofillDataManager,
-                windowProtection: windowProtection
+                autofillDataManager: autofillDataManager
               )
               self.navigationController?.pushViewController(
                 managePasswordsViewController,

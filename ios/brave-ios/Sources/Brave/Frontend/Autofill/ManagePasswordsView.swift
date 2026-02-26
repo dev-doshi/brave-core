@@ -23,8 +23,6 @@ struct ManagePasswordsView: View {
   @State private var isDeleteSelectionDialogPresented: Bool = false
   @ScaledMetric var infoIconSize: CGFloat = 24
 
-  private let windowProtection: WindowProtection?
-
   private var isContentUnavailable: Bool {
     viewModel.allowedGroups.isEmpty && viewModel.blockedGroups.isEmpty && !viewModel.isRefreshing
   }
@@ -33,11 +31,7 @@ struct ManagePasswordsView: View {
     editMode?.wrappedValue == .active
   }
 
-  init(
-    autofillDataManager: CWVAutofillDataManager,
-    windowProtection: WindowProtection?
-  ) {
-    self.windowProtection = windowProtection
+  init(autofillDataManager: CWVAutofillDataManager) {
     self._viewModel = State(
       initialValue: ManagePasswordsViewModel(autofillDataManager: autofillDataManager)
     )

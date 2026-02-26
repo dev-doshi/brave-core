@@ -12,16 +12,11 @@ import UIKit
 class ManagePasswordsViewController: UIHostingController<ManagePasswordsView> {
 
   private let autofillDataManager: CWVAutofillDataManager
-  private let windowProtection: WindowProtection?
 
-  init(autofillDataManager: CWVAutofillDataManager, windowProtection: WindowProtection?) {
+  init(autofillDataManager: CWVAutofillDataManager) {
     self.autofillDataManager = autofillDataManager
-    self.windowProtection = windowProtection
 
-    let managePasswordsView = ManagePasswordsView(
-      autofillDataManager: autofillDataManager,
-      windowProtection: windowProtection
-    )
+    let managePasswordsView = ManagePasswordsView(autofillDataManager: autofillDataManager)
 
     super.init(rootView: managePasswordsView)
   }
