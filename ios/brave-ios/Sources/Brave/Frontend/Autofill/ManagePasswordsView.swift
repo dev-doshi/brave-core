@@ -12,40 +12,35 @@ import SwiftUI
 import UIKit
 
 struct ManagePasswordsView: View {
+  private typealias GroupID = ManagePasswordsViewModel.GroupID
+
   @Environment(\.editMode) private var editMode
   @ObservedObject private var saveLogins = Preferences.General.saveLogins
   @State private var isSceneActive = true
   @State private var viewModel: ManagePasswordsViewModel
-  @State private var searchText: String = ""
   @State private var isSearchActive: Bool = false
-  @State private var selectedDomainIds: Set<String> = []
+  @State private var selectedGroupIds: Set<GroupID> = []
   @State private var isDeleteSelectionDialogPresented: Bool = false
-  @State private var isDeletePasswordDialogPresented: Bool = false
   @ScaledMetric var infoIconSize: CGFloat = 24
 
-  private let passwordAPI: BravePasswordAPI
   private let windowProtection: WindowProtection?
 
-  private static func domainId(saved: Bool, domain: String) -> String {
-    saved ? "saved:\(domain)" : "blocked:\(domain)"
-  }
-
   private var isContentUnavailable: Bool {
-    viewModel.credentialList.isEmpty && viewModel.blockedList.isEmpty && !viewModel.isRefreshing
-      && !isSearchActive
+    viewModel.allowedGroups.isEmpty && viewModel.blockedGroups.isEmpty && !viewModel.isRefreshing
   }
 
   init(
-    passwordAPI: BravePasswordAPI,
+    autofillDataManager: CWVAutofillDataManager,
     windowProtection: WindowProtection?
   ) {
-    self.passwordAPI = passwordAPI
     self.windowProtection = windowProtection
-    self._viewModel = State(initialValue: ManagePasswordsViewModel(passwordAPI: passwordAPI))
+    self._viewModel = State(
+      initialValue: ManagePasswordsViewModel(autofillDataManager: autofillDataManager)
+    )
   }
 
   var body: some View {
-    List(selection: $selectedDomainIds) {
+    List(selection: $selectedGroupIds) {
       if !isSearchActive {
         Section {
           Text(Strings.Autofill.managePasswordsInstructions)
@@ -62,17 +57,16 @@ struct ManagePasswordsView: View {
       }
 
       Section {
-        ForEach(viewModel.groupedCredentialList, id: \.domain) { domain, credentials in
-          let id = ManagePasswordsView.domainId(saved: true, domain: domain)
+        ForEach(viewModel.allowedGroups, id: \.domain) { domain, credentials in
           ManagePasswordListRow(
             domain: domain,
             credentials: credentials,
-            isSaved: true,
-            passwordAPI: passwordAPI,
+            isSaved: true
           )
+          .tag(GroupID.saved(domain: domain))
           .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
-              isDeletePasswordDialogPresented = true
+              viewModel.deletePasswords(credentials)
             } label: {
               Label(
                 Strings.Autofill.managePasswordsDeleteCredentialButtonTitle,
@@ -87,19 +81,18 @@ struct ManagePasswordsView: View {
           .font(.subheadline)
       }
 
-      if !viewModel.blockedList.isEmpty {
+      if !viewModel.blockedGroups.isEmpty {
         Section {
-          ForEach(Array(viewModel.groupedBlockedList), id: \.domain) { domain, credentials in
-            let id = ManagePasswordsView.domainId(saved: false, domain: domain)
+          ForEach(viewModel.blockedGroups, id: \.domain) { domain, credentials in
             ManagePasswordListRow(
               domain: domain,
               credentials: credentials,
-              isSaved: false,
-              passwordAPI: passwordAPI,
+              isSaved: false
             )
+            .tag(GroupID.blocked(domain: domain))
             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
               Button(role: .destructive) {
-                isDeletePasswordDialogPresented = true
+                viewModel.deletePasswords(credentials)
               } label: {
                 Label(
                   Strings.Autofill.managePasswordsDeleteCredentialButtonTitle,
@@ -152,7 +145,7 @@ struct ManagePasswordsView: View {
     }
     .background(Color(.braveGroupedBackground))
     .searchable(
-      text: $searchText,
+      text: $viewModel.searchText,
       isPresented: $isSearchActive,
       placement: .navigationBarDrawer(displayMode: .always),
       prompt: Strings.Autofill.managePasswordsListSearchWebsitesPrompt
@@ -174,22 +167,19 @@ struct ManagePasswordsView: View {
               isDeleteSelectionDialogPresented = true
             }
             .foregroundStyle(
-              selectedDomainIds.isEmpty ? Color(braveSystemName: .textSecondary) : .red
+              selectedGroupIds.isEmpty ? Color(braveSystemName: .textSecondary) : .red
             )
-            .disabled(selectedDomainIds.isEmpty)
+            .disabled(selectedGroupIds.isEmpty)
             .confirmationDialog(
               Strings.Autofill.managePasswordsDeleteCredentialsAlertTitle,
               isPresented: $isDeleteSelectionDialogPresented
             ) {
-              Button(
-                Strings.CancelString,
-                role: .cancel
-              ) {}
+              Button(Strings.CancelString, role: .cancel) {}
               Button(
                 Strings.Autofill.managePasswordsDeleteCredentialButtonTitle,
                 role: .destructive
               ) {
-                deleteSelectedDomains()
+                deleteSelectedGroups()
               }
             } message: {
               Text(
@@ -203,19 +193,9 @@ struct ManagePasswordsView: View {
           }
           Spacer()
           EditButton()
-            .disabled(viewModel.groupedCredentialList.isEmpty)
+            .disabled(viewModel.allowedGroups.isEmpty)
         }
       }
-    }
-    .onAppear {
-      if !searchText.isEmpty {
-        viewModel.performSearch(query: searchText.lowercased())
-      } else {
-        viewModel.fetchCredentials()
-      }
-    }
-    .onChange(of: searchText) {
-      viewModel.performSearch(query: searchText.lowercased())
     }
     .onReceive(NotificationCenter.default.publisher(for: UIScene.willDeactivateNotification)) { _ in
       isSceneActive = false
@@ -226,69 +206,23 @@ struct ManagePasswordsView: View {
   }
 
   private var selectedDomainsString: String {
-    selectedDomainIds.reduce(into: "") { result, domainId in
-      let savedDomainPrefix = "saved:"
-      let blockedDomainPrefix = "blocked:"
-      let domain: String
-
-      if domainId.hasPrefix(savedDomainPrefix) {
-        domain = String(domainId.dropFirst(savedDomainPrefix.count))
-      } else if domainId.hasPrefix(blockedDomainPrefix) {
-        domain = String(domainId.dropFirst(blockedDomainPrefix.count))
-      } else {
-        domain = domainId
-      }
-      if !result.isEmpty { result += ", " }
-      result += domain
-    }
+    selectedGroupIds.map { $0.domain }.sorted().joined(separator: ", ")
   }
 
-  private func deleteSelectedDomains() {
-    var credentialsToRemove: [PasswordForm] = []
-    for id in selectedDomainIds {
-      if id.hasPrefix("saved:") {
-        let domain = String(id.dropFirst(6))
-        if let group = viewModel.groupedCredentialList.first(where: { $0.domain == domain }) {
-          credentialsToRemove.append(contentsOf: group.credentials)
-        }
-      } else if id.hasPrefix("blocked:") {
-        let domain = String(id.dropFirst(8))
-        if let group = viewModel.groupedBlockedList.first(where: { $0.domain == domain }) {
-          credentialsToRemove.append(contentsOf: group.credentials)
-        }
-      }
-    }
-    viewModel.removeCredentials(credentialsToRemove)
-    selectedDomainIds.removeAll()
+  private func deleteSelectedGroups() {
+    viewModel.deletePasswords(forGroupIds: selectedGroupIds)
+    selectedGroupIds.removeAll()
     editMode?.wrappedValue = .inactive
-  }
-
-  private func deleteDomain(_ domainId: String) {
-    var credentialsToRemove: [PasswordForm] = []
-    if domainId.hasPrefix("saved:") {
-      let domain = String(domainId.dropFirst(6))
-      if let group = viewModel.groupedCredentialList.first(where: { $0.domain == domain }) {
-        credentialsToRemove.append(contentsOf: group.credentials)
-      }
-    } else if domainId.hasPrefix("blocked:") {
-      let domain = String(domainId.dropFirst(8))
-      if let group = viewModel.groupedBlockedList.first(where: { $0.domain == domain }) {
-        credentialsToRemove.append(contentsOf: group.credentials)
-      }
-    }
-    viewModel.removeCredentials(credentialsToRemove)
-    selectedDomainIds.remove(domainId)
   }
 }
 
 private struct ManagePasswordListRow: View {
   let domain: String
-  let credentials: [PasswordForm]
+  let credentials: [CWVPassword]
   let isSaved: Bool
-  let passwordAPI: BravePasswordAPI
 
   private var resolvedRealmURL: URL {
-    credentials.first.flatMap { URL(string: $0.signOnRealm) } ?? URL(string: "about:blank")!
+    credentials.first.flatMap { URL(string: $0.site) } ?? URL(string: "about:blank")!
   }
 
   private var resolvedDomain: String {

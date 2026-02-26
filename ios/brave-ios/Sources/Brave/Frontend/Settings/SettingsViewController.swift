@@ -1238,15 +1238,29 @@ class SettingsViewController: TableViewController {
         Row(
           text: Strings.Autofill.managePasswordsTitle,
           selection: { [unowned self] in
-            let loginsPasswordsViewController = LoginListViewController(
-              passwordAPI: self.passwordAPI,
-              windowProtection: self.windowProtection
-            )
-            loginsPasswordsViewController.settingsDelegate = self.settingsDelegate
-            self.navigationController?.pushViewController(
-              loginsPasswordsViewController,
-              animated: true
-            )
+
+            if FeatureList.kUseChromiumWebViewsAutofill.enabled,
+              let autofillDataManager = braveCore.defaultWebViewConfiguration.autofillDataManager
+            {
+              let managePasswordsViewController = ManagePasswordsViewController(
+                autofillDataManager: autofillDataManager,
+                windowProtection: windowProtection
+              )
+              self.navigationController?.pushViewController(
+                managePasswordsViewController,
+                animated: true
+              )
+            } else {
+              let loginsPasswordsViewController = LoginListViewController(
+                passwordAPI: passwordAPI,
+                windowProtection: windowProtection
+              )
+              loginsPasswordsViewController.settingsDelegate = self.settingsDelegate
+              self.navigationController?.pushViewController(
+                loginsPasswordsViewController,
+                animated: true
+              )
+            }
           },
           image: UIImage(braveSystemNamed: "leo.key"),
           accessory: .disclosureIndicator

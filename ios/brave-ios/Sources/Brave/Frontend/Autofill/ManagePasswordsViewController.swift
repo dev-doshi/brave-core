@@ -11,15 +11,15 @@ import UIKit
 
 class ManagePasswordsViewController: UIHostingController<ManagePasswordsView> {
 
-  private let passwordAPI: BravePasswordAPI
+  private let autofillDataManager: CWVAutofillDataManager
   private let windowProtection: WindowProtection?
 
-  init(passwordAPI: BravePasswordAPI, windowProtection: WindowProtection?) {
-    self.passwordAPI = passwordAPI
+  init(autofillDataManager: CWVAutofillDataManager, windowProtection: WindowProtection?) {
+    self.autofillDataManager = autofillDataManager
     self.windowProtection = windowProtection
 
     let managePasswordsView = ManagePasswordsView(
-      passwordAPI: passwordAPI,
+      autofillDataManager: autofillDataManager,
       windowProtection: windowProtection
     )
 
