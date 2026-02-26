@@ -7,6 +7,7 @@
 #define BRAVE_COMPONENTS_ENDPOINT_CLIENT_PROTOBUF_H_
 
 #include <concepts>
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <string_view>

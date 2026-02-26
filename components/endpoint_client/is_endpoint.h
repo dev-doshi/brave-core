@@ -10,6 +10,8 @@
 
 #include "brave/components/endpoint_client/is_request.h"
 #include "brave/components/endpoint_client/is_response.h"
+#include "brave/components/endpoint_client/json.h"
+#include "brave/components/endpoint_client/protobuf.h"
 #include "url/gurl.h"
 
 namespace endpoint_client {

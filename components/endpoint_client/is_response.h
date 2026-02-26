@@ -7,6 +7,8 @@
 #define BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_RESPONSE_H_
 
 #include "brave/components/endpoint_client/is_response_body.h"
+#include "brave/components/endpoint_client/json.h"
+#include "brave/components/endpoint_client/protobuf.h"
 #include "brave/components/endpoint_client/response.h"
 
 namespace endpoint_client::detail {

@@ -7,6 +7,8 @@
 #define BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_REQUEST_H_
 
 #include "brave/components/endpoint_client/is_request_body.h"
+#include "brave/components/endpoint_client/json.h"
+#include "brave/components/endpoint_client/protobuf.h"
 #include "brave/components/endpoint_client/request.h"
 
 namespace endpoint_client::detail {

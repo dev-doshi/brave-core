@@ -9,6 +9,7 @@
 #include <concepts>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <type_traits>
 
 #include "base/json/json_reader.h"
