@@ -13,13 +13,13 @@ import { untrustedFrameDragHandlingSetup } from './hooks/useUntrustedFrameDragHa
 // <if expr="is_ios">
 import { useIOSOneTapFix } from '../common/useIOSOneTapFix'
 import UntrustedConversationFrameAPI from './untrusted_conversation_frame_api'
+// </if>
+
+import '../common/strings'
 
 function onTapElsewhereDismissMenus() {
   UntrustedConversationFrameAPI.getInstance().parentUIFrame.dismissMenus()
 }
-// </if>
-
-import '../common/strings'
 
 setIconBasePath('chrome-untrusted://resources/brave-icons')
 
