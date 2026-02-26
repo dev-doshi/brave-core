@@ -12,7 +12,7 @@
 
 #include "base/functional/callback.h"
 #include "base/memory/weak_ptr.h"
-#include "brave/components/local_ai/core/background_web_ui.h"
+#include "brave/components/local_ai/core/background_web_contents.h"
 #include "brave/components/local_ai/core/local_ai.mojom.h"
 #include "components/keyed_service/core/keyed_service.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
@@ -25,22 +25,22 @@ namespace local_ai {
 // LocalAIService provides on-device machine learning capabilities.
 //
 // This service manages:
-// - A BackgroundWebUI that owns the ML model worker
+// - A BackgroundWebContents that owns the ML model worker
 // - Communication between the browser process and the renderer via Mojo
 // - Request queueing while the model initializes
 // - Cleanup on shutdown and renderer crash
 class LocalAIService : public KeyedService,
                        public mojom::LocalAIService,
-                       public BackgroundWebUI::Delegate {
+                       public BackgroundWebContents::Delegate {
  public:
-  // Factory that creates a platform-specific BackgroundWebUI. Platform
+  // Factory that creates a platform-specific BackgroundWebContents. Platform
   // params (BrowserContext*, URL, tagging callback) are bound into the
   // closure at the browser layer.
-  using BackgroundWebUIFactory =
-      base::RepeatingCallback<std::unique_ptr<BackgroundWebUI>(
-          BackgroundWebUI::Delegate* delegate)>;
+  using BackgroundWebContentsFactory =
+      base::RepeatingCallback<std::unique_ptr<BackgroundWebContents>(
+          BackgroundWebContents::Delegate* delegate)>;
 
-  explicit LocalAIService(BackgroundWebUIFactory factory);
+  explicit LocalAIService(BackgroundWebContentsFactory factory);
   ~LocalAIService() override;
 
   LocalAIService(const LocalAIService&) = delete;
@@ -59,18 +59,19 @@ class LocalAIService : public KeyedService,
   // KeyedService:
   void Shutdown() override;
 
-  // BackgroundWebUI::Delegate:
+  // BackgroundWebContents::Delegate:
   void OnBackgroundContentsReady() override;
-  void OnBackgroundContentsDestroyed() override;
+  void OnBackgroundContentsDestroyed(
+      BackgroundWebContents::DestroyReason reason) override;
 
   void CancelPendingRequests();
   void MaybeCreateBackgroundContents();
   void CloseBackgroundContents();
 
-  // Background web UI that owns the model worker page
-  std::unique_ptr<BackgroundWebUI> background_web_ui_;
+  // Background web contents that owns the model worker page
+  std::unique_ptr<BackgroundWebContents> background_web_contents_;
 
-  BackgroundWebUIFactory background_web_ui_factory_;
+  BackgroundWebContentsFactory background_web_contents_factory_;
 
   mojo::ReceiverSet<mojom::LocalAIService> receivers_;
 

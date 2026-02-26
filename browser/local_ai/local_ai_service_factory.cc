@@ -11,8 +11,8 @@
 #include "base/functional/bind.h"
 #include "base/no_destructor.h"
 #include "brave/components/constants/webui_url_constants.h"
-#include "brave/components/local_ai/content/background_web_ui_impl.h"
-#include "brave/components/local_ai/core/background_web_ui.h"
+#include "brave/components/local_ai/content/background_web_contents_impl.h"
+#include "brave/components/local_ai/core/background_web_contents.h"
 #include "brave/components/local_ai/core/local_ai_service.h"
 #include "brave/grit/brave_generated_resources.h"
 #include "chrome/browser/profiles/profile.h"
@@ -68,9 +68,9 @@ LocalAIServiceFactory::BuildServiceInstanceForBrowserContext(
     content::BrowserContext* context) const {
   auto factory = base::BindRepeating(
       [](content::BrowserContext* browser_context,
-         BackgroundWebUI::Delegate* delegate)
-          -> std::unique_ptr<BackgroundWebUI> {
-        return std::make_unique<BackgroundWebUIImpl>(
+         BackgroundWebContents::Delegate* delegate)
+          -> std::unique_ptr<BackgroundWebContents> {
+        return std::make_unique<BackgroundWebContentsImpl>(
             browser_context, GURL(kUntrustedOnDeviceModelWorkerURL), delegate,
             base::BindOnce([](content::WebContents* web_contents) {
               task_manager::WebContentsTags::CreateForToolContents(

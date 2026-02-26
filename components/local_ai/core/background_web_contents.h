@@ -3,19 +3,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#ifndef BRAVE_COMPONENTS_LOCAL_AI_CORE_BACKGROUND_WEB_UI_H_
-#define BRAVE_COMPONENTS_LOCAL_AI_CORE_BACKGROUND_WEB_UI_H_
+#ifndef BRAVE_COMPONENTS_LOCAL_AI_CORE_BACKGROUND_WEB_CONTENTS_H_
+#define BRAVE_COMPONENTS_LOCAL_AI_CORE_BACKGROUND_WEB_CONTENTS_H_
 
 namespace local_ai {
 
 // Abstract interface for a background web environment that runs local AI
-// model workers. The core/ layer talks only through this interface — it
+// model workers. The core/ layer talks only through this interface -- it
 // never sees WebContents, BrowserContext, or any content-layer type.
 //
-// Desktop: implemented by BackgroundWebUIImpl (content/).
+// Desktop: implemented by BackgroundWebContentsImpl (content/).
 // iOS: would be implemented by a WKWebView-based equivalent.
-class BackgroundWebUI {
+class BackgroundWebContents {
  public:
+  enum class DestroyReason {
+    kClose,         // window.close() or CloseContents
+    kInvalidUrl,    // Navigated to an unexpected URL
+    kRendererGone,  // Renderer process crashed or was killed
+  };
+
   class Delegate {
    public:
     // Called when the background environment has finished loading and
@@ -23,17 +29,17 @@ class BackgroundWebUI {
     virtual void OnBackgroundContentsReady() = 0;
 
     // Called when the background environment is destroyed unexpectedly
-    // (renderer crash, window.close, invalid URL). The BackgroundWebUI
+    // (renderer crash, window.close, invalid URL). The BackgroundWebContents
     // instance is invalid after this call.
-    virtual void OnBackgroundContentsDestroyed() = 0;
+    virtual void OnBackgroundContentsDestroyed(DestroyReason reason) = 0;
 
    protected:
     virtual ~Delegate() = default;
   };
 
-  virtual ~BackgroundWebUI() = default;
+  virtual ~BackgroundWebContents() = default;
 };
 
 }  // namespace local_ai
 
-#endif  // BRAVE_COMPONENTS_LOCAL_AI_CORE_BACKGROUND_WEB_UI_H_
+#endif  // BRAVE_COMPONENTS_LOCAL_AI_CORE_BACKGROUND_WEB_CONTENTS_H_

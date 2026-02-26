@@ -29,7 +29,7 @@ static_library("core") {
   assert_no_deps = [ "//content/public/*" ]
 
   sources = [
-    "background_web_ui.h",
+    "background_web_contents.h",
     "local_ai_service.cc",
     "local_ai_service.h",
     "local_models_updater.cc",

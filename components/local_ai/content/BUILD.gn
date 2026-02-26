@@ -5,10 +5,8 @@
 
 static_library("content") {
   sources = [
-    "background_web_contents.cc",
-    "background_web_contents.h",
-    "background_web_ui_impl.cc",
-    "background_web_ui_impl.h",
+    "background_web_contents_impl.cc",
+    "background_web_contents_impl.h",
   ]
 
   public_deps = [ "//base" ]

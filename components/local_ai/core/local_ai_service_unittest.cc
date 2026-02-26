@@ -12,7 +12,7 @@
 #include "base/memory/raw_ptr.h"
 #include "base/test/task_environment.h"
 #include "base/test/test_future.h"
-#include "brave/components/local_ai/core/background_web_ui.h"
+#include "brave/components/local_ai/core/background_web_contents.h"
 #include "brave/components/local_ai/core/local_ai.mojom.h"
 #include "mojo/public/cpp/bindings/receiver.h"
 #include "mojo/public/cpp/bindings/remote.h"
@@ -50,16 +50,18 @@ class FakeModelWorker : public mojom::OnDeviceModelWorker {
   mojo::Receiver<mojom::OnDeviceModelWorker> receiver_{this};
 };
 
-// Fake BackgroundWebUI that stores the delegate so tests can trigger
+// Fake BackgroundWebContents that stores the delegate so tests can trigger
 // lifecycle events manually.
-class FakeBackgroundWebUI : public BackgroundWebUI {
+class FakeBackgroundWebContents : public BackgroundWebContents {
  public:
-  FakeBackgroundWebUI(Delegate* delegate, base::OnceClosure on_destroyed)
+  FakeBackgroundWebContents(Delegate* delegate, base::OnceClosure on_destroyed)
       : delegate_(delegate), on_destroyed_(std::move(on_destroyed)) {}
-  ~FakeBackgroundWebUI() override { std::move(on_destroyed_).Run(); }
+  ~FakeBackgroundWebContents() override { std::move(on_destroyed_).Run(); }
 
   void SimulateReady() { delegate_->OnBackgroundContentsReady(); }
-  void SimulateDestroyed() { delegate_->OnBackgroundContentsDestroyed(); }
+  void SimulateDestroyed() {
+    delegate_->OnBackgroundContentsDestroyed(DestroyReason::kRendererGone);
+  }
 
  private:
   raw_ptr<Delegate> delegate_;
@@ -72,7 +74,7 @@ class LocalAIServiceTest : public testing::Test {
  protected:
   void SetUp() override {
     service_ = std::make_unique<LocalAIService>(base::BindRepeating(
-        &LocalAIServiceTest::CreateFakeWebUI, base::Unretained(this)));
+        &LocalAIServiceTest::CreateFakeWebContents, base::Unretained(this)));
   }
 
   void TearDown() override {
@@ -80,14 +82,15 @@ class LocalAIServiceTest : public testing::Test {
     service_.reset();
   }
 
-  std::unique_ptr<BackgroundWebUI> CreateFakeWebUI(
-      BackgroundWebUI::Delegate* delegate) {
-    auto web_ui = std::make_unique<FakeBackgroundWebUI>(
-        delegate, base::BindOnce(
-                      [](raw_ptr<FakeBackgroundWebUI>* ref) { *ref = nullptr; },
-                      &last_created_web_ui_));
-    last_created_web_ui_ = web_ui.get();
-    return web_ui;
+  std::unique_ptr<BackgroundWebContents> CreateFakeWebContents(
+      BackgroundWebContents::Delegate* delegate) {
+    auto web_contents = std::make_unique<FakeBackgroundWebContents>(
+        delegate,
+        base::BindOnce(
+            [](raw_ptr<FakeBackgroundWebContents>* ref) { *ref = nullptr; },
+            &last_created_web_contents_));
+    last_created_web_contents_ = web_contents.get();
+    return web_contents;
   }
 
   void BindFakeModelWorker() {
@@ -98,14 +101,14 @@ class LocalAIServiceTest : public testing::Test {
   base::test::TaskEnvironment task_environment_;
   std::unique_ptr<LocalAIService> service_;
   FakeModelWorker fake_model_worker_;
-  raw_ptr<FakeBackgroundWebUI> last_created_web_ui_ = nullptr;
+  raw_ptr<FakeBackgroundWebContents> last_created_web_contents_ = nullptr;
 };
 
 TEST_F(LocalAIServiceTest, GenerateEmbeddingsCreatesBackgroundContents) {
   base::test::TestFuture<const std::vector<double>&> future;
   service_->GenerateEmbeddings("test", future.GetCallback());
 
-  EXPECT_TRUE(last_created_web_ui_);
+  EXPECT_TRUE(last_created_web_contents_);
   EXPECT_FALSE(future.IsReady());
 }
 
@@ -160,8 +163,8 @@ TEST_F(LocalAIServiceTest, OnBackgroundContentsDestroyedFailsPending) {
   base::test::TestFuture<const std::vector<double>&> future;
   service_->GenerateEmbeddings("pending", future.GetCallback());
 
-  ASSERT_TRUE(last_created_web_ui_);
-  last_created_web_ui_->SimulateDestroyed();
+  ASSERT_TRUE(last_created_web_contents_);
+  last_created_web_contents_->SimulateDestroyed();
 
   EXPECT_EQ(std::vector<double>{}, future.Get());
 }
@@ -173,8 +176,8 @@ TEST_F(LocalAIServiceTest, ReinitializesAfterDestroyed) {
   BindFakeModelWorker();
   EXPECT_EQ(TestEmbedding(), setup_future.Get());
 
-  ASSERT_TRUE(last_created_web_ui_);
-  last_created_web_ui_->SimulateDestroyed();
+  ASSERT_TRUE(last_created_web_contents_);
+  last_created_web_contents_->SimulateDestroyed();
 
   // A new GenerateEmbeddings() call should queue (not crash) since
   // state was reset.

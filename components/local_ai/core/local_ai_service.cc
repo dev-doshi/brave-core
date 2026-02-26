@@ -24,8 +24,8 @@ LocalAIService::PendingRequest::PendingRequest(PendingRequest&&) = default;
 LocalAIService::PendingRequest& LocalAIService::PendingRequest::operator=(
     PendingRequest&&) = default;
 
-LocalAIService::LocalAIService(BackgroundWebUIFactory factory)
-    : background_web_ui_factory_(std::move(factory)) {
+LocalAIService::LocalAIService(BackgroundWebContentsFactory factory)
+    : background_web_contents_factory_(std::move(factory)) {
   CHECK(base::FeatureList::IsEnabled(features::kLocalAIModels));
   DVLOG(3) << "LocalAIService created";
 }
@@ -82,7 +82,8 @@ void LocalAIService::OnBackgroundContentsReady() {
   DVLOG(3) << "LocalAIService: Background contents ready";
 }
 
-void LocalAIService::OnBackgroundContentsDestroyed() {
+void LocalAIService::OnBackgroundContentsDestroyed(
+    BackgroundWebContents::DestroyReason reason) {
   DVLOG(1) << "LocalAIService: Background contents destroyed";
   CloseBackgroundContents();
 }
@@ -109,13 +110,13 @@ void LocalAIService::ProcessPendingRequests() {
 }
 
 void LocalAIService::MaybeCreateBackgroundContents() {
-  if (background_web_ui_) {
+  if (background_web_contents_) {
     return;
   }
 
   DVLOG(3) << "LocalAIService: Creating background contents";
 
-  background_web_ui_ = background_web_ui_factory_.Run(this);
+  background_web_contents_ = background_web_contents_factory_.Run(this);
 }
 
 void LocalAIService::CancelPendingRequests() {
@@ -132,7 +133,7 @@ void LocalAIService::CloseBackgroundContents() {
 
   model_worker_remote_.reset();
   CancelPendingRequests();
-  background_web_ui_.reset();
+  background_web_contents_.reset();
 }
 
 }  // namespace local_ai
