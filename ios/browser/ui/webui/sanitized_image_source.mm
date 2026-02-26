@@ -59,7 +59,6 @@ std::map<std::string, std::string> ParseParams(std::string_view param_string) {
   url::Component query(0, param_string.size());
   url::Component key;
   url::Component value;
-  constexpr int kMaxUriDecodeLen = 2048;
   std::map<std::string, std::string> params;
   while (url::ExtractQueryKeyValue(param_string, &query, &key, &value)) {
     params.insert({std::string(param_string.substr(key.begin, key.len)),
