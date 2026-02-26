@@ -64,7 +64,7 @@ class LocalAIService : public KeyedService,
   void OnBackgroundContentsDestroyed() override;
 
   void CancelPendingRequests();
-  void EnsureBackgroundContents();
+  void MaybeCreateBackgroundContents();
   void CloseBackgroundContents();
 
   // Background web UI that owns the model worker page

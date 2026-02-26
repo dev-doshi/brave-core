@@ -68,7 +68,7 @@ void LocalAIService::RegisterOnDeviceModelWorker(
 
 void LocalAIService::GenerateEmbeddings(const std::string& text,
                                         GenerateEmbeddingsCallback callback) {
-  EnsureBackgroundContents();
+  MaybeCreateBackgroundContents();
 
   if (!model_worker_remote_.is_bound()) {
     DVLOG(3) << "Model worker not ready yet, queuing request";
@@ -111,7 +111,7 @@ void LocalAIService::ProcessPendingRequests() {
   }
 }
 
-void LocalAIService::EnsureBackgroundContents() {
+void LocalAIService::MaybeCreateBackgroundContents() {
   if (background_web_ui_) {
     return;
   }
