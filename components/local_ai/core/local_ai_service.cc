@@ -56,7 +56,6 @@ void LocalAIService::RegisterOnDeviceModelWorker(
   model_worker_remote_.set_disconnect_handler(base::BindOnce(
       [](LocalAIService* service) {
         DVLOG(1) << "Model worker remote disconnected";
-        service->CancelPendingRequests();
         service->CloseBackgroundContents();
       },
       base::Unretained(this)));
