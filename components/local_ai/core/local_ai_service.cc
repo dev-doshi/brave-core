@@ -56,7 +56,7 @@ void LocalAIService::RegisterOnDeviceModelWorker(
   model_worker_remote_.set_disconnect_handler(base::BindOnce(
       [](LocalAIService* service) {
         DVLOG(1) << "Model worker remote disconnected";
-        service->FailPendingRequests();
+        service->CancelPendingRequests();
         service->CloseBackgroundContents();
       },
       base::Unretained(this)));
@@ -85,7 +85,7 @@ void LocalAIService::OnBackgroundContentsReady() {
 
 void LocalAIService::OnBackgroundContentsDestroyed() {
   DVLOG(1) << "LocalAIService: Background contents destroyed";
-  FailPendingRequests();
+  CancelPendingRequests();
   background_web_ui_.reset();
   model_worker_remote_.reset();
 }
@@ -121,7 +121,7 @@ void LocalAIService::EnsureBackgroundContents() {
   background_web_ui_ = background_web_ui_factory_.Run(this);
 }
 
-void LocalAIService::FailPendingRequests() {
+void LocalAIService::CancelPendingRequests() {
   std::vector<PendingRequest> requests;
   requests.swap(pending_requests_);
   for (auto& request : requests) {
@@ -134,7 +134,7 @@ void LocalAIService::CloseBackgroundContents() {
               "to free memory";
 
   model_worker_remote_.reset();
-  FailPendingRequests();
+  CancelPendingRequests();
   background_web_ui_.reset();
 }
 

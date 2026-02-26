@@ -63,7 +63,7 @@ class LocalAIService : public KeyedService,
   void OnBackgroundContentsReady() override;
   void OnBackgroundContentsDestroyed() override;
 
-  void FailPendingRequests();
+  void CancelPendingRequests();
   void EnsureBackgroundContents();
   void CloseBackgroundContents();
 
