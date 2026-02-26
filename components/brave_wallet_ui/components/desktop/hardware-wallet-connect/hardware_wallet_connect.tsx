@@ -4,7 +4,7 @@
 // You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import * as React from 'react'
-import * as crypto from 'crypto'
+import * as crypto from 'node:crypto'
 import { assert, assertNotReached } from 'chrome://resources/js/assert.js'
 
 // utils

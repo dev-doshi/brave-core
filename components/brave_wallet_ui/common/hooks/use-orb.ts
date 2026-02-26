@@ -5,7 +5,7 @@
 
 import * as React from 'react'
 import * as EthereumBlockies from 'ethereum-blockies'
-import * as crypto from 'crypto'
+import * as crypto from 'node:crypto'
 
 import { BraveWallet } from '../../constants/types'
 
