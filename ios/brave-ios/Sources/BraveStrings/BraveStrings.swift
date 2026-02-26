@@ -16,6 +16,13 @@ extension Strings {
     value: "Cancel",
     comment: ""
   )
+  public static let addButtonTitle = NSLocalizedString(
+    "addButtonTitle",
+    tableName: "BraveShared",
+    bundle: .module,
+    value: "Add",
+    comment: "Add a new item to the cuurent list"
+  )
   /// A confirmation title that appears in an alert to dismiss changes in a form or text input
   public static let dismissChangesConfirmationTitle = NSLocalizedString(
     "DismissChangesConfirmationTitle",

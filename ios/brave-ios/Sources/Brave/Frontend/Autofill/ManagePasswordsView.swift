@@ -29,6 +29,10 @@ struct ManagePasswordsView: View {
     viewModel.allowedGroups.isEmpty && viewModel.blockedGroups.isEmpty && !viewModel.isRefreshing
   }
 
+  private var isEditMode: Bool {
+    editMode?.wrappedValue == .active
+  }
+
   init(
     autofillDataManager: CWVAutofillDataManager,
     windowProtection: WindowProtection?
@@ -160,6 +164,14 @@ struct ManagePasswordsView: View {
     .navigationTitle(Strings.Autofill.managePasswordsTitle)
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
+      ToolbarItem(placement: .navigationBarTrailing) {
+        Button {
+          //TODO: Present Detail View or Grouped View
+        } label: {
+          Label(Strings.addButtonTitle, braveSystemImage: "leo.plus.add")
+        }
+        .disabled(isEditMode)
+      }
       ToolbarItemGroup(placement: .bottomBar) {
         if !isContentUnavailable {
           if editMode?.wrappedValue == .active {
