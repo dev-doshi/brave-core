@@ -23,8 +23,9 @@ template <typename T, Method M, typename BodyType>
   requires IsRequestBody<T, BodyType>
 inline constexpr bool kIsRequest<Request<T, M>, BodyType> = true;
 
-// Partial specialization (single-argument form): a type T satisfies IsRequest
-// if it models either a JSON-backed or Protobuf-backed request.
+// Partial specialization (single-argument form): a type T satisfies
+// IsRequest if it models either a JSON request
+// or a Protobuf request.
 template <typename T>
 inline constexpr bool kIsRequest<T> =
     kIsRequest<T, JSON> || kIsRequest<T, Protobuf>;
