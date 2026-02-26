@@ -265,10 +265,7 @@ export default defineConfig([
       '@eslint-community/eslint-comments/no-duplicate-disable': 'off',
       '@eslint-community/eslint-comments/require-description': 'off',
 
-      'import/enforce-node-protocol-usage': 'off',
-      'import/first': 'off',
       'import/no-absolute-path': 'off',
-      'import/no-named-default': 'off',
 
       'react-hooks/immutability': 'off',
       'react-hooks/preserve-manual-memoization': 'off',
