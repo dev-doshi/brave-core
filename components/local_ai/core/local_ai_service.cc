@@ -85,9 +85,7 @@ void LocalAIService::OnBackgroundContentsReady() {
 
 void LocalAIService::OnBackgroundContentsDestroyed() {
   DVLOG(1) << "LocalAIService: Background contents destroyed";
-  CancelPendingRequests();
-  background_web_ui_.reset();
-  model_worker_remote_.reset();
+  CloseBackgroundContents();
 }
 
 void LocalAIService::Shutdown() {
