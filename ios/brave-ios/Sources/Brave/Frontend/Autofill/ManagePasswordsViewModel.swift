@@ -41,10 +41,8 @@ class ManagePasswordsViewModel {
   }
 
   var isRefreshing: Bool = false
-  var savedGroups: [(domain: String, credentials: [CWVPassword])] = []
+  var allowedGroups: [(domain: String, credentials: [CWVPassword])] = []
   var blockedGroups: [(domain: String, credentials: [CWVPassword])] = []
-  var filteredSavedGroups: [(domain: String, credentials: [CWVPassword])] = []
-  var filteredBlockedGroups: [(domain: String, credentials: [CWVPassword])] = []
   var searchText: String = "" {
     didSet { applyFilter() }
   }
@@ -80,29 +78,37 @@ class ManagePasswordsViewModel {
   }
 
   private func updateGroups(allowed: [CWVPassword], blocked: [CWVPassword]) {
-    savedGroups = allowed.groupedByDomain()
-    blockedGroups = blocked.groupedByDomain()
-    applyFilter()
+    applyFilter(
+      allowed: allowed.groupedByDomain(),
+      blocked: blocked.groupedByDomain()
+    )
   }
 
-  /// Filters `savedGroups` and `blockedGroups`  using the current `searchText`,
-  /// lowercasing the query once and matching against both domain and username.
-  /// When the query is empty the filtered results mirror the full groups unchanged.
-  private func applyFilter() {
+  /// Filters the provided groups using the current `searchText`, lowercasing the query once and
+  /// matching against both domain and username. When the query is empty the results mirror the full groups unchanged.
+  private func applyFilter(
+    allowed: [(domain: String, credentials: [CWVPassword])]? = nil,
+    blocked: [(domain: String, credentials: [CWVPassword])]? = nil
+  ) {
+    let allowedSource = allowed ?? allowedGroups
+    let blockedSource = blocked ?? blockedGroups
     guard !searchText.isEmpty else {
-      filteredSavedGroups = savedGroups
-      filteredBlockedGroups = blockedGroups
+      allowedGroups = allowedSource
+      blockedGroups = blockedSource
       return
     }
     let lower = searchText.lowercased()
-    let filter: ([(domain: String, credentials: [CWVPassword])]) -> [(domain: String, credentials: [CWVPassword])] = { groups in
-      groups.filter { group in
-        group.domain.lowercased().contains(lower)
-          || group.credentials.contains { ($0.username ?? "").lowercased().contains(lower) }
+    let filter:
+      ([(domain: String, credentials: [CWVPassword])]) -> [(
+        domain: String, credentials: [CWVPassword]
+      )] = { groups in
+        groups.filter { group in
+          group.domain.lowercased().contains(lower)
+            || group.credentials.contains { ($0.username ?? "").lowercased().contains(lower) }
+        }
       }
-    }
-    filteredSavedGroups = filter(savedGroups)
-    filteredBlockedGroups = filter(blockedGroups)
+    allowedGroups = filter(allowedSource)
+    blockedGroups = filter(blockedSource)
   }
 
   func fetchPasswords() {
@@ -138,12 +144,12 @@ class ManagePasswordsViewModel {
   func deletePasswords(forGroupIds groupIds: Set<GroupID>) {
     // Snapshot the current groups before deletion to avoid operating on
     // potentially stale data if a fetch completes mid-deletion.
-    let savedSnapshot = savedGroups
+    let allowedSnapshot = allowedGroups
     let blockedSnapshot = blockedGroups
     let toDelete = groupIds.flatMap { groupId -> [CWVPassword] in
       let (groups, domain): ([(domain: String, credentials: [CWVPassword])], String) =
         switch groupId {
-        case .saved(let d): (savedSnapshot, d)
+        case .saved(let d): (allowedSnapshot, d)
         case .blocked(let d): (blockedSnapshot, d)
         }
       return groups.first { $0.domain == domain }?.credentials ?? []
@@ -154,7 +160,7 @@ class ManagePasswordsViewModel {
   private func credentials(for groupId: GroupID) -> [CWVPassword] {
     let (groups, domain): ([(domain: String, credentials: [CWVPassword])], String) =
       switch groupId {
-      case .saved(let d): (savedGroups, d)
+      case .saved(let d): (allowedGroups, d)
       case .blocked(let d): (blockedGroups, d)
       }
     return groups.first { $0.domain == domain }?.credentials ?? []
