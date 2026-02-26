@@ -105,6 +105,7 @@ class LoginListDataSource {
     passwordForms: [PasswordForm],
     completion: @escaping (Bool) -> Void
   ) {
+    // Clear the blocklist before new items append
     blockedList.removeAll()
 
     if let query = query, !query.isEmpty {
@@ -127,6 +128,7 @@ class LoginListDataSource {
       }
     } else {
       credentialList = passwordForms.filter { form in
+        // Check If the website is blocked by user with Never Save functionality
         if form.isBlockedByUser {
           blockedList.append(form)
         }
