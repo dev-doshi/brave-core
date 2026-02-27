@@ -17,9 +17,11 @@ import UntrustedConversationFrameAPI from './untrusted_conversation_frame_api'
 
 import '../common/strings'
 
+// <if expr="is_ios">
 function onTapElsewhereDismissMenus() {
   UntrustedConversationFrameAPI.getInstance().parentUIFrame.dismissMenus()
 }
+// </if>
 
 setIconBasePath('chrome-untrusted://resources/brave-icons')
 
