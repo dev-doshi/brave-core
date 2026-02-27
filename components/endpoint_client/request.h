@@ -9,6 +9,7 @@
 #include <string_view>
 
 #include "base/time/time.h"
+#include "brave/components/endpoint_client/is_request.h"
 #include "brave/components/endpoint_client/is_request_body.h"
 #include "net/http/http_request_headers.h"
 #include "net/traffic_annotation/network_traffic_annotation.h"
@@ -32,10 +33,8 @@ enum class Method {
 // Wrapper that binds an IsRequestBody to a specific HTTP method.
 // Inherits from T to expose its ToValue() interface, and
 // adds a static Method() accessor returning the canonical HTTP method string.
-template <IsRequestBody T, Method M>
+template <IsRequestBody Body, Method M>
 struct Request {
-  using Body = T;
-
   static constexpr std::string_view Method() {
     if constexpr (M == Method::kConnect) {
       return net::HttpRequestHeaders::kConnectMethod;
@@ -63,18 +62,44 @@ struct Request {
   }
 
   static constexpr std::string_view ContentType() {
-    if constexpr (IsRequestBody<T, JSON>) {
-      return JSON::ContentType();
-    } else if constexpr (IsRequestBody<T, Protobuf>) {
-      return Protobuf::ContentType();
-    } else {
-      static_assert(false, "T must be JSON or Protobuf!");
-    }
+    return ContentType<Request>();
   }
+
+  std::optional<std::string> Serialize() const { return Serialize(body); }
 
   Body body;
   net::MutableNetworkTrafficAnnotationTag network_traffic_annotation_tag;
   base::TimeDelta timeout_duration;
+
+ private:
+  // Returns the Content-Type value associated with JSON payloads.
+  template <IsRequest<JSON>>
+  static constexpr std::string_view ContentType() {
+    return "application/json";
+  }
+
+  // Returns the Content-Type value associated with Protobuf payloads.
+  template <IsRequest<Protobuf>>
+  static constexpr std::string_view ContentType() {
+    return "application/x-protobuf";
+  }
+
+  // Serializes a JSON request body to a JSON string.
+  // Returns std::nullopt if the request body produces an empty object.
+  template <IsRequestBody<JSON> B>
+  static std::optional<std::string> Serialize(const B& request_body) {
+    const auto dict = request_body.ToValue();
+    return !dict.empty() ? base::WriteJson(dict).value_or("")
+                         : std::optional<std::string>();
+  }
+
+  // Serializes a Protobuf request body to a binary string.
+  // Returns std::nullopt if the request body is empty (ByteSizeLong() == 0).
+  template <IsRequestBody<Protobuf> B>
+  static std::optional<std::string> Serialize(const B& request_body) {
+    return request_body.ByteSizeLong() ? request_body.SerializeAsString()
+                                       : std::optional<std::string>();
+  }
 };
 
 }  // namespace endpoint_client::detail

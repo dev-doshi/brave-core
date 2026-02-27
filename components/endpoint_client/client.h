@@ -122,21 +122,8 @@ class Client {
         static_cast<net::NetworkTrafficAnnotationTag>(
             request.network_traffic_annotation_tag));
     simple_url_loader->SetAllowHttpErrorResults(true);
-
-    auto upload_data = [&] {
-      if constexpr (detail::IsRequestBody<typename Request::Body,
-                                          detail::JSON>) {
-        return detail::JSON::Serialize(request.body);
-      } else if constexpr (detail::IsRequestBody<typename Request::Body,
-                                                 detail::Protobuf>) {
-        return detail::Protobuf::Serialize(request.body);
-      } else {
-        static_assert(false, "Request::Body must be JSON or Protobuf!");
-      }
-    }();
-
-    if (upload_data) {
-      CHECK(!upload_data->empty()) << "Failed to serialize request body!";
+    if (auto upload_data = request.Serialize()) {
+      CHECK(!upload_data->empty()) << "Failed to serialize request!";
       simple_url_loader->AttachStringForUpload(std::move(*upload_data),
                                                Request::ContentType());
     }
@@ -205,18 +192,9 @@ class Client {
       response.headers = std::move(headers);
     }
 
-    response.body = [&] {
-      const bool is_2xx = network::IsSuccessfulStatus(*response.status_code);
-      if constexpr (detail::IsResponse<Response, detail::JSON>) {
-        return detail::JSON::Deserialize<Response>(is_2xx,
-                                                   std::move(response_body));
-      } else if constexpr (detail::IsResponse<Response, detail::Protobuf>) {
-        return detail::Protobuf::Deserialize<Response>(
-            is_2xx, std::move(response_body));
-      } else {
-        static_assert(false, "Response must be JSON or Protobuf!");
-      }
-    }();
+    response.body = Response::Deserialize(
+        network::IsSuccessfulStatus(*response.status_code),
+        std::move(response_body));
 
     std::move(callback).Run(std::move(response));
   }

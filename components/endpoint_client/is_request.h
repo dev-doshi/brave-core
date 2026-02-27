@@ -9,9 +9,12 @@
 #include "brave/components/endpoint_client/is_request_body.h"
 #include "brave/components/endpoint_client/json.h"
 #include "brave/components/endpoint_client/protobuf.h"
-#include "brave/components/endpoint_client/request.h"
 
 namespace endpoint_client::detail {
+
+enum class Method;
+template <IsRequestBody, Method>
+struct Request;
 
 // Primary template: a type does not satisfy IsRequest unless
 // matched by one of the partial specializations below.

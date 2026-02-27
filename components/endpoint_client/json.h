@@ -46,47 +46,6 @@ struct JSON {
   static constexpr bool kIsResponseBody = requires(const base::Value& value) {
     { T::FromValue(value) } -> std::same_as<std::optional<T>>;
   };
-
-  // Returns the Content-Type value associated with JSON payloads.
-  static constexpr std::string_view ContentType() { return "application/json"; }
-
-  // Serializes a JSON request body to a JSON string.
-  // Returns std::nullopt if the request body produces an empty object.
-  template <typename RequestBody>
-    requires kIsRequestBody<RequestBody>
-  static std::optional<std::string> Serialize(const RequestBody& request_body) {
-    const auto dict = request_body.ToValue();
-    return !dict.empty() ? base::WriteJson(dict).value_or("")
-                         : std::optional<std::string>();
-  }
-
-  // Deserializes a JSON response payload into the endpoint's
-  // typed Response::body value. The SuccessBody or ErrorBody is
-  // selected based on whether the HTTP status is 2xx.
-  template <typename Response>
-    requires(kIsResponseBody<typename Response::SuccessBody> &&
-             kIsResponseBody<typename Response::ErrorBody>)
-  static auto Deserialize(bool is_2xx,
-                          std::optional<std::string> response_body) {
-    if (is_2xx ? std::is_empty_v<typename Response::SuccessBody>
-               : std::is_empty_v<typename Response::ErrorBody>) {
-      response_body = "{}";
-    }
-
-    const auto value =
-        base::JSONReader::Read(response_body.value_or(""), base::JSON_PARSE_RFC)
-            .value_or(base::Value());
-
-    decltype(Response().body) result;
-    if (is_2xx) {
-      result = Response::SuccessBody::FromValue(value);
-    } else {
-      result = Response::ErrorBody::FromValue(value).transform(
-          [](auto body) { return base::unexpected(std::move(body)); });
-    }
-
-    return result;
-  }
 };
 
 }  // namespace endpoint_client::detail

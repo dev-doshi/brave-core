@@ -9,9 +9,13 @@
 #include "brave/components/endpoint_client/is_response_body.h"
 #include "brave/components/endpoint_client/json.h"
 #include "brave/components/endpoint_client/protobuf.h"
-#include "brave/components/endpoint_client/response.h"
 
-namespace endpoint_client::detail {
+namespace endpoint_client {
+
+template <detail::IsResponseBody, detail::IsResponseBody>
+struct Response;
+
+namespace detail {
 
 // Primary template: a type does not satisfy IsResponse unless
 // matched by one of the partial specializations below.
@@ -37,6 +41,8 @@ inline constexpr bool kIsResponse<T> =
 template <typename... Ts>
 concept IsResponse = kIsResponse<Ts...>;
 
-}  // namespace endpoint_client::detail
+}  // namespace detail
+
+}  // namespace endpoint_client
 
 #endif  // BRAVE_COMPONENTS_ENDPOINT_CLIENT_IS_RESPONSE_H_
